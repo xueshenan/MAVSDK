@@ -49,8 +49,29 @@ int main(int argc, const char* argv[])
         std::cout << info << std::endl;
     });
 
-    auto take_photo_result = camera.take_photo();
-    std::cout << "Take phto return : " << take_photo_result << std::endl;
+    auto operation_result = camera.take_photo();
+    std::cout << "take photo result : " << result << std::endl;
 
+    operation_result = camera.start_video();
+    std::cout << "start video result : " << operation_result << std::endl;
+
+    operation_result = camera.stop_video();
+    std::cout << "stop video result : " << operation_result << std::endl;
+
+    operation_result = camera.start_video_streaming();
+    std::cout << "start video streaming result : " << operation_result << std::endl;
+
+    operation_result = camera.stop_video_streaming();
+    std::cout << "stop video streaming result : " << operation_result << std::endl;
+
+    operation_result = camera.set_mode(mavsdk::Camera::Mode::Photo);
+    std::cout << "Set camera to photo mode result : " << operation_result << std::endl;
+
+    operation_result = camera.set_mode(mavsdk::Camera::Mode::Video);
+    std::cout << "Set camera to video mode result : " << operation_result << std::endl;
+
+    while (true) {
+        std::this_thread::sleep_for(std::chrono::seconds(1));
+    }
     return 0;
 }
