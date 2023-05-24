@@ -64,6 +64,22 @@ public:
     operator<<(std::ostream& str, CameraServer::TakePhotoFeedback const& take_photo_feedback);
 
     /**
+     * @brief Camera mode type.
+     */
+    enum class CameraMode {
+        Unknown, /**< @brief Unknown. */
+        Photo, /**< @brief Photo mode. */
+        Video, /**< @brief Video mode. */
+    };
+
+    /**
+     * @brief Stream operator to print information about a `CameraServer::CameraMode`.
+     *
+     * @return A reference to the stream.
+     */
+    friend std::ostream& operator<<(std::ostream& str, CameraServer::CameraMode const& camera_mode);
+
+    /**
      * @brief Type to represent a camera information.
      */
     struct Information {
@@ -261,6 +277,113 @@ public:
      */
     Result
     respond_take_photo(TakePhotoFeedback take_photo_feedback, CaptureInfo capture_info) const;
+
+    /**
+     * @brief Callback type for subscribe_start_video.
+     */
+    using StartVideoCallback = std::function<void(int32_t)>;
+
+    /**
+     * @brief Handle type for subscribe_start_video.
+     */
+    using StartVideoHandle = Handle<int32_t>;
+
+    /**
+     * @brief Subscribe to start video requests. Each request received should response to using
+     * StartVideoResponse
+     */
+    StartVideoHandle subscribe_start_video(const StartVideoCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_start_video
+     */
+    void unsubscribe_start_video(StartVideoHandle handle);
+
+    /**
+     * @brief Callback type for subscribe_stop_video.
+     */
+    using StopVideoCallback = std::function<void(int32_t)>;
+
+    /**
+     * @brief Handle type for subscribe_stop_video.
+     */
+    using StopVideoHandle = Handle<int32_t>;
+
+    /**
+     * @brief Subscribe to stop video requests. Each request received should response to using
+     * StopVideoResponse
+     */
+    StopVideoHandle subscribe_stop_video(const StopVideoCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_stop_video
+     */
+    void unsubscribe_stop_video(StopVideoHandle handle);
+
+    /**
+     * @brief Callback type for subscribe_start_video_streaming.
+     */
+    using StartVideoStreamingCallback = std::function<void(int32_t)>;
+
+    /**
+     * @brief Handle type for subscribe_start_video_streaming.
+     */
+    using StartVideoStreamingHandle = Handle<int32_t>;
+
+    /**
+     * @brief Subscribe to start video streaming requests. Each request received should response to
+     * using StartVideoStreamingResponse
+     */
+    StartVideoStreamingHandle
+    subscribe_start_video_streaming(const StartVideoStreamingCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_start_video_streaming
+     */
+    void unsubscribe_start_video_streaming(StartVideoStreamingHandle handle);
+
+    /**
+     * @brief Callback type for subscribe_stop_video_streaming.
+     */
+    using StopVideoStreamingCallback = std::function<void(int32_t)>;
+
+    /**
+     * @brief Handle type for subscribe_stop_video_streaming.
+     */
+    using StopVideoStreamingHandle = Handle<int32_t>;
+
+    /**
+     * @brief Subscribe to stop video streaming requests. Each request received should response to
+     * using StopVideoStreamingResponse
+     */
+    StopVideoStreamingHandle
+    subscribe_stop_video_streaming(const StopVideoStreamingCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_stop_video_streaming
+     */
+    void unsubscribe_stop_video_streaming(StopVideoStreamingHandle handle);
+
+    /**
+     * @brief Callback type for subscribe_set_camera_mode.
+     */
+    using SetCameraModeCallback = std::function<void(CameraMode)>;
+
+    /**
+     * @brief Handle type for subscribe_set_camera_mode.
+     */
+    using SetCameraModeHandle = Handle<CameraMode>;
+
+    /**
+     * @brief Subscribe to set camera mode requests. Each request received should response to using
+     * SetCameraModeResponse
+     */
+    SetCameraModeHandle subscribe_set_camera_mode(const SetCameraModeCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_set_camera_mode
+     */
+    void unsubscribe_set_camera_mode(SetCameraModeHandle handle);
 
     /**
      * @brief Copy constructor.

@@ -54,6 +54,23 @@ int main(int argc, char** argv)
             });
     });
 
+    camera_server.subscribe_start_video([](int32_t stream_id) {
+        std::cout << "Start video record" << std::endl;
+        // camera_server.respond_start_video();
+    });
+
+    camera_server.subscribe_stop_video(
+        [](int32_t stream_id) { std::cout << "Stop video record" << std::endl; });
+
+    camera_server.subscribe_start_video_streaming(
+        [](int32_t stream_id) { std::cout << "Start video streaming" << std::endl; });
+
+    camera_server.subscribe_stop_video_streaming(
+        [](int32_t stream_id) { std::cout << "Stop video streaming" << std::endl; });
+
+    camera_server.subscribe_set_camera_mode([](mavsdk::CameraServer::CameraMode camera_mode) {
+        std::cout << "Set camera mode " << camera_mode << std::endl;
+    });
     // Then set the initial state of everything.
 
     // TODO: this state is not guaranteed, e.g. a new system appears

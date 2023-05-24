@@ -25,6 +25,26 @@ public:
         CameraServer::TakePhotoFeedback take_photo_feedback,
         CameraServer::CaptureInfo capture_info);
 
+    CameraServer::StartVideoHandle
+    subscribe_start_video(const CameraServer::StartVideoCallback& callback);
+    void unsubscribe_start_video(CameraServer::StartVideoHandle handle);
+
+    CameraServer::StopVideoHandle
+    subscribe_stop_video(const CameraServer::StopVideoCallback& callback);
+    void unsubscribe_stop_video(CameraServer::StopVideoHandle handle);
+
+    CameraServer::StartVideoStreamingHandle
+    subscribe_start_video_streaming(const CameraServer::StartVideoStreamingCallback& callback);
+    void unsubscribe_start_video_streaming(CameraServer::StartVideoStreamingHandle handle);
+
+    CameraServer::StopVideoStreamingHandle
+    subscribe_stop_video_streaming(const CameraServer::StopVideoStreamingCallback& callback);
+    void unsubscribe_stop_video_streaming(CameraServer::StopVideoStreamingHandle handle);
+
+    CameraServer::SetCameraModeHandle
+    subscribe_set_camera_mode(const CameraServer::SetCameraModeCallback& callback);
+    void unsubscribe_set_camera_mode(CameraServer::SetCameraModeHandle handle);
+
 private:
     enum StatusFlags {
         IN_PROGRESS = 1 << 0,
@@ -49,6 +69,11 @@ private:
     int32_t _image_capture_count{};
 
     CallbackList<int32_t> _take_photo_callbacks{};
+    CallbackList<int32_t> _start_video_callbacks{};
+    CallbackList<int32_t> _stop_video_callbacks{};
+    CallbackList<int32_t> _start_video_streaming_callbacks{};
+    CallbackList<int32_t> _stop_video_streaming_callbacks{};
+    CallbackList<CameraServer::CameraMode> _set_camera_mode_callbacks{};
 
     MavlinkCommandReceiver::CommandLong _last_take_photo_command;
 
