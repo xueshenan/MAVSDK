@@ -71,6 +71,21 @@ int main(int argc, char** argv)
     camera_server.subscribe_set_camera_mode([](mavsdk::CameraServer::CameraMode camera_mode) {
         std::cout << "Set camera mode " << camera_mode << std::endl;
     });
+
+    camera_server.subscribe_storage_information([&camera_server](int32_t storage_id) {
+        mavsdk::CameraServer::StorageInformation storage_information;
+        constexpr int kTotalStorage = 4 * 1024 * 1024;
+        storage_information.total_storage_mib = kTotalStorage;
+        storage_information.used_storage_mib = 100;
+        storage_information.available_storage_mib =
+            kTotalStorage - storage_information.used_storage_mib;
+        storage_information.storage_status =
+            mavsdk::CameraServer::StorageInformation::StorageStatus::Formatted;
+        storage_information.storage_type =
+            mavsdk::CameraServer::StorageInformation::StorageType::Microsd;
+
+        camera_server.respond_storage_information(storage_information);
+    });
     // Then set the initial state of everything.
 
     // TODO: this state is not guaranteed, e.g. a new system appears

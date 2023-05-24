@@ -15,6 +15,8 @@ using Position = CameraServer::Position;
 using Quaternion = CameraServer::Quaternion;
 using CaptureInfo = CameraServer::CaptureInfo;
 
+using StorageInformation = CameraServer::StorageInformation;
+
 CameraServer::CameraServer(std::shared_ptr<ServerComponent> server_component) :
     ServerPluginBase(),
     _impl{std::make_unique<CameraServerImpl>(server_component)}
@@ -100,6 +102,23 @@ CameraServer::subscribe_set_camera_mode(const SetCameraModeCallback& callback)
 void CameraServer::unsubscribe_set_camera_mode(SetCameraModeHandle handle)
 {
     _impl->unsubscribe_set_camera_mode(handle);
+}
+
+CameraServer::StorageInformationHandle
+CameraServer::subscribe_storage_information(const StorageInformationCallback& callback)
+{
+    return _impl->subscribe_storage_information(callback);
+}
+
+void CameraServer::unsubscribe_storage_information(StorageInformationHandle handle)
+{
+    _impl->unsubscribe_storage_information(handle);
+}
+
+CameraServer::Result
+CameraServer::respond_storage_information(StorageInformation storage_information) const
+{
+    return _impl->respond_storage_information(storage_information);
 }
 
 bool operator==(const CameraServer::Information& lhs, const CameraServer::Information& rhs)
@@ -228,6 +247,77 @@ std::ostream& operator<<(std::ostream& str, CameraServer::Result const& result)
         default:
             return str << "Unknown";
     }
+}
+
+std::ostream&
+operator<<(std::ostream& str, CameraServer::StorageInformation::StorageStatus const& storage_status)
+{
+    switch (storage_status) {
+        case CameraServer::StorageInformation::StorageStatus::NotAvailable:
+            return str << "Not Available";
+        case CameraServer::StorageInformation::StorageStatus::Unformatted:
+            return str << "Unformatted";
+        case CameraServer::StorageInformation::StorageStatus::Formatted:
+            return str << "Formatted";
+        case CameraServer::StorageInformation::StorageStatus::NotSupported:
+            return str << "Not Supported";
+        default:
+            return str << "Unknown";
+    }
+}
+
+std::ostream&
+operator<<(std::ostream& str, CameraServer::StorageInformation::StorageType const& storage_type)
+{
+    switch (storage_type) {
+        case CameraServer::StorageInformation::StorageType::Unknown:
+            return str << "Unknown";
+        case CameraServer::StorageInformation::StorageType::UsbStick:
+            return str << "Usb Stick";
+        case CameraServer::StorageInformation::StorageType::Sd:
+            return str << "Sd";
+        case CameraServer::StorageInformation::StorageType::Microsd:
+            return str << "Microsd";
+        case CameraServer::StorageInformation::StorageType::Hd:
+            return str << "Hd";
+        case CameraServer::StorageInformation::StorageType::Other:
+            return str << "Other";
+        default:
+            return str << "Unknown";
+    }
+}
+bool operator==(
+    const CameraServer::StorageInformation& lhs, const CameraServer::StorageInformation& rhs)
+{
+    return ((std::isnan(rhs.used_storage_mib) && std::isnan(lhs.used_storage_mib)) ||
+            rhs.used_storage_mib == lhs.used_storage_mib) &&
+           ((std::isnan(rhs.available_storage_mib) && std::isnan(lhs.available_storage_mib)) ||
+            rhs.available_storage_mib == lhs.available_storage_mib) &&
+           ((std::isnan(rhs.total_storage_mib) && std::isnan(lhs.total_storage_mib)) ||
+            rhs.total_storage_mib == lhs.total_storage_mib) &&
+           (rhs.storage_status == lhs.storage_status) && (rhs.storage_id == lhs.storage_id) &&
+           (rhs.storage_type == lhs.storage_type) &&
+           ((std::isnan(rhs.read_speed) && std::isnan(lhs.read_speed)) ||
+            rhs.read_speed == lhs.read_speed) &&
+           ((std::isnan(rhs.write_speed) && std::isnan(lhs.write_speed)) ||
+            rhs.write_speed == lhs.write_speed);
+}
+
+std::ostream&
+operator<<(std::ostream& str, CameraServer::StorageInformation const& storage_information)
+{
+    str << std::setprecision(15);
+    str << "storage_information:" << '\n' << "{\n";
+    str << "    used_storage_mib: " << storage_information.used_storage_mib << '\n';
+    str << "    available_storage_mib: " << storage_information.available_storage_mib << '\n';
+    str << "    total_storage_mib: " << storage_information.total_storage_mib << '\n';
+    str << "    storage_status: " << storage_information.storage_status << '\n';
+    str << "    storage_id: " << storage_information.storage_id << '\n';
+    str << "    storage_type: " << storage_information.storage_type << '\n';
+    str << "    read_speed: " << storage_information.read_speed << '\n';
+    str << "    write_speed: " << storage_information.write_speed << '\n';
+    str << '}';
+    return str;
 }
 
 std::ostream&

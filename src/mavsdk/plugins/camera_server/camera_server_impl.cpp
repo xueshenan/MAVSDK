@@ -346,6 +346,93 @@ void CameraServerImpl::unsubscribe_set_camera_mode(CameraServer::SetCameraModeHa
     _set_camera_mode_callbacks.unsubscribe(handle);
 }
 
+CameraServer::StorageInformationHandle CameraServerImpl::subscribe_storage_information(
+    const CameraServer::StorageInformationCallback& callback)
+{
+    return _storage_information_callbacks.subscribe(callback);
+}
+
+void CameraServerImpl::unsubscribe_storage_information(
+    CameraServer::StorageInformationHandle handle)
+{
+    _storage_information_callbacks.unsubscribe(handle);
+}
+
+CameraServer::Result CameraServerImpl::respond_storage_information(
+    CameraServer::StorageInformation storage_information) const
+{
+    const uint8_t storage_count = 1;
+
+    const float total_capacity = storage_information.total_storage_mib;
+    const float used_capacity = storage_information.used_storage_mib;
+    const float available_capacity = storage_information.available_storage_mib;
+    const float read_speed = storage_information.read_speed;
+    const float write_speed = storage_information.write_speed;
+
+    auto status = STORAGE_STATUS::STORAGE_STATUS_NOT_SUPPORTED;
+    switch (storage_information.storage_status) {
+        case CameraServer::StorageInformation::StorageStatus::NotAvailable:
+            status = STORAGE_STATUS::STORAGE_STATUS_NOT_SUPPORTED;
+            break;
+        case CameraServer::StorageInformation::StorageStatus::Unformatted:
+            status = STORAGE_STATUS::STORAGE_STATUS_UNFORMATTED;
+            break;
+        case CameraServer::StorageInformation::StorageStatus::Formatted:
+            status = STORAGE_STATUS::STORAGE_STATUS_READY;
+            break;
+        case CameraServer::StorageInformation::StorageStatus::NotSupported:
+            break;
+    }
+
+    auto type = STORAGE_TYPE::STORAGE_TYPE_UNKNOWN;
+    switch (storage_information.storage_type) {
+        case CameraServer::StorageInformation::StorageType::UsbStick:
+            type = STORAGE_TYPE::STORAGE_TYPE_USB_STICK;
+            break;
+        case CameraServer::StorageInformation::StorageType::Sd:
+            type = STORAGE_TYPE::STORAGE_TYPE_SD;
+            break;
+        case CameraServer::StorageInformation::StorageType::Microsd:
+            type = STORAGE_TYPE::STORAGE_TYPE_MICROSD;
+            break;
+        case CameraServer::StorageInformation::StorageType::Hd:
+            type = STORAGE_TYPE::STORAGE_TYPE_HD;
+            break;
+        case CameraServer::StorageInformation::StorageType::Other:
+            type = STORAGE_TYPE::STORAGE_TYPE_OTHER;
+            break;
+        default:
+            break;
+    }
+
+    std::string name("");
+    // This needs to be long enough, otherwise the memcpy in mavlink overflows.
+    name.resize(32);
+    const uint8_t storage_usage = 0;
+
+    mavlink_message_t msg{};
+    mavlink_msg_storage_information_pack(
+        _server_component_impl->get_own_system_id(),
+        _server_component_impl->get_own_component_id(),
+        &msg,
+        static_cast<uint32_t>(_server_component_impl->get_time().elapsed_s() * 1e3),
+        _last_storage_id,
+        storage_count,
+        status,
+        total_capacity,
+        used_capacity,
+        available_capacity,
+        read_speed,
+        write_speed,
+        type,
+        name.data(),
+        storage_usage);
+
+    _server_component_impl->send_message(msg);
+    LogDebug() << "send storage information";
+    return CameraServer::Result::Success;
+}
+
 /**
  * Starts capturing images with the given interval.
  * @param [in]  interval_s      The interval between captures in seconds.
@@ -509,51 +596,17 @@ std::optional<mavlink_message_t> CameraServerImpl::process_storage_information_r
             command, MAV_RESULT::MAV_RESULT_ACCEPTED);
     }
 
-    // ack needs to be sent before camera information message
-    auto ack_msg =
-        _server_component_impl->make_command_ack_message(command, MAV_RESULT::MAV_RESULT_ACCEPTED);
-    _server_component_impl->send_message(ack_msg);
-    LogDebug() << "sent storage ack";
+    if (_storage_information_callbacks.empty()) {
+        LogDebug()
+            << "Get storage information requested with no set storage information subscriber";
+        return _server_component_impl->make_command_ack_message(
+            command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
+    }
 
-    // FIXME: why is this needed to prevent dropping messages?
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    _last_storage_id = storage_id;
+    _storage_information_callbacks(storage_id);
 
-    // unsupported
-    const uint8_t storage_count = 0;
-    const auto status = STORAGE_STATUS::STORAGE_STATUS_NOT_SUPPORTED;
-    const float total_capacity = 0;
-    const float used_capacity = 0;
-    const float available_capacity = 0;
-    const float read_speed = 0;
-    const float write_speed = 0;
-    const uint8_t type = STORAGE_TYPE::STORAGE_TYPE_UNKNOWN;
-    std::string name("");
-    // This needs to be long enough, otherwise the memcpy in mavlink overflows.
-    name.resize(32);
-    const uint8_t storage_usage = 0;
-
-    mavlink_message_t msg{};
-    mavlink_msg_storage_information_pack(
-        _server_component_impl->get_own_system_id(),
-        _server_component_impl->get_own_component_id(),
-        &msg,
-        static_cast<uint32_t>(_server_component_impl->get_time().elapsed_s() * 1e3),
-        storage_id,
-        storage_count,
-        status,
-        total_capacity,
-        used_capacity,
-        available_capacity,
-        read_speed,
-        write_speed,
-        type,
-        name.data(),
-        storage_usage);
-
-    _server_component_impl->send_message(msg);
-    LogDebug() << "sent storage msg";
-
-    // ack was already sent
+    // result will return in respond_storage_information
     return std::nullopt;
 }
 
@@ -644,12 +697,28 @@ CameraServerImpl::process_set_camera_mode(const MavlinkCommandReceiver::CommandL
 {
     auto camera_mode = static_cast<CAMERA_MODE>(command.params.param2);
 
-    UNUSED(camera_mode);
+    if (_set_camera_mode_callbacks.empty()) {
+        LogDebug() << "Set camera mode requested with no set camera mode subscriber";
+        return _server_component_impl->make_command_ack_message(
+            command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
+    }
 
-    LogDebug() << "unsupported set camera mode request";
+    // convert camera mode enum type
+    CameraServer::CameraMode convert_camera_mode = CameraServer::CameraMode::Unknown;
+    if (camera_mode == CAMERA_MODE_IMAGE) {
+        convert_camera_mode = CameraServer::CameraMode::Photo;
+    } else if (camera_mode == CAMERA_MODE_VIDEO) {
+        convert_camera_mode = CameraServer::CameraMode::Video;
+    }
+
+    if (convert_camera_mode == CameraServer::CameraMode::Unknown) {
+        return _server_component_impl->make_command_ack_message(
+            command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
+    }
+    _set_camera_mode_callbacks(convert_camera_mode);
 
     return _server_component_impl->make_command_ack_message(
-        command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
+        command, MAV_RESULT::MAV_RESULT_ACCEPTED);
 }
 
 std::optional<mavlink_message_t>

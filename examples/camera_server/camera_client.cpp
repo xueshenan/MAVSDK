@@ -49,6 +49,11 @@ int main(int argc, const char* argv[])
         std::cout << info << std::endl;
     });
 
+    camera.subscribe_status([](mavsdk::Camera::Status status) {
+        std::cout << "Camera status:" << std::endl;
+        std::cout << status << std::endl;
+    });
+
     auto operation_result = camera.take_photo();
     std::cout << "take photo result : " << result << std::endl;
 
