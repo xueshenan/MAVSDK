@@ -16,6 +16,7 @@ using Quaternion = CameraServer::Quaternion;
 using CaptureInfo = CameraServer::CaptureInfo;
 
 using StorageInformation = CameraServer::StorageInformation;
+using CaptureStatus = CameraServer::CaptureStatus;
 
 CameraServer::CameraServer(std::shared_ptr<ServerComponent> server_component) :
     ServerPluginBase(),
@@ -27,11 +28,6 @@ CameraServer::~CameraServer() {}
 CameraServer::Result CameraServer::set_information(Information information) const
 {
     return _impl->set_information(information);
-}
-
-CameraServer::Result CameraServer::set_in_progress(bool in_progress) const
-{
-    return _impl->set_in_progress(in_progress);
 }
 
 CameraServer::TakePhotoHandle CameraServer::subscribe_take_photo(const TakePhotoCallback& callback)
@@ -119,6 +115,22 @@ CameraServer::Result
 CameraServer::respond_storage_information(StorageInformation storage_information) const
 {
     return _impl->respond_storage_information(storage_information);
+}
+
+CameraServer::CaptureStatusHandle
+CameraServer::subscribe_capture_status(const CaptureStatusCallback& callback)
+{
+    return _impl->subscribe_capture_status(callback);
+}
+
+void CameraServer::unsubscribe_capture_status(CaptureStatusHandle handle)
+{
+    _impl->unsubscribe_capture_status(handle);
+}
+
+CameraServer::Result CameraServer::respond_capture_status(CaptureStatus capture_status) const
+{
+    return _impl->respond_capture_status(capture_status);
 }
 
 bool operator==(const CameraServer::Information& lhs, const CameraServer::Information& rhs)
@@ -316,6 +328,61 @@ operator<<(std::ostream& str, CameraServer::StorageInformation const& storage_in
     str << "    storage_type: " << storage_information.storage_type << '\n';
     str << "    read_speed: " << storage_information.read_speed << '\n';
     str << "    write_speed: " << storage_information.write_speed << '\n';
+    str << '}';
+    return str;
+}
+
+std::ostream&
+operator<<(std::ostream& str, CameraServer::CaptureStatus::ImageStatus const& image_status)
+{
+    switch (image_status) {
+        case CameraServer::CaptureStatus::ImageStatus::Idle:
+            return str << "Idle";
+        case CameraServer::CaptureStatus::ImageStatus::CaptureInProgress:
+            return str << "Capture In Progress";
+        case CameraServer::CaptureStatus::ImageStatus::IntervalIdle:
+            return str << "Interval Idle";
+        case CameraServer::CaptureStatus::ImageStatus::IntervalInProgress:
+            return str << "Interval In Progress";
+        default:
+            return str << "Unknown";
+    }
+}
+
+std::ostream&
+operator<<(std::ostream& str, CameraServer::CaptureStatus::VideoStatus const& video_status)
+{
+    switch (video_status) {
+        case CameraServer::CaptureStatus::VideoStatus::Idle:
+            return str << "Idle";
+        case CameraServer::CaptureStatus::VideoStatus::CaptureInProgress:
+            return str << "Capture In Progress";
+        default:
+            return str << "Unknown";
+    }
+}
+bool operator==(const CameraServer::CaptureStatus& lhs, const CameraServer::CaptureStatus& rhs)
+{
+    return ((std::isnan(rhs.image_interval) && std::isnan(lhs.image_interval)) ||
+            rhs.image_interval == lhs.image_interval) &&
+           ((std::isnan(rhs.recording_time_s) && std::isnan(lhs.recording_time_s)) ||
+            rhs.recording_time_s == lhs.recording_time_s) &&
+           ((std::isnan(rhs.available_capacity) && std::isnan(lhs.available_capacity)) ||
+            rhs.available_capacity == lhs.available_capacity) &&
+           (rhs.image_status == lhs.image_status) && (rhs.video_status == lhs.video_status) &&
+           (rhs.image_count == lhs.image_count);
+}
+
+std::ostream& operator<<(std::ostream& str, CameraServer::CaptureStatus const& capture_status)
+{
+    str << std::setprecision(15);
+    str << "capture_status:" << '\n' << "{\n";
+    str << "    image_interval: " << capture_status.image_interval << '\n';
+    str << "    recording_time_s: " << capture_status.recording_time_s << '\n';
+    str << "    available_capacity: " << capture_status.available_capacity << '\n';
+    str << "    image_status: " << capture_status.image_status << '\n';
+    str << "    video_status: " << capture_status.video_status << '\n';
+    str << "    image_count: " << capture_status.image_count << '\n';
     str << '}';
     return str;
 }

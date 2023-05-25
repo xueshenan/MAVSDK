@@ -188,12 +188,6 @@ CameraServer::Result CameraServerImpl::set_information(CameraServer::Information
     return CameraServer::Result::Success;
 }
 
-CameraServer::Result CameraServerImpl::set_in_progress(bool in_progress)
-{
-    _is_image_capture_in_progress = in_progress;
-    return CameraServer::Result::Success;
-}
-
 CameraServer::TakePhotoHandle
 CameraServerImpl::subscribe_take_photo(const CameraServer::TakePhotoCallback& callback)
 {
@@ -433,6 +427,61 @@ CameraServer::Result CameraServerImpl::respond_storage_information(
     return CameraServer::Result::Success;
 }
 
+CameraServer::CaptureStatusHandle
+CameraServerImpl::subscribe_capture_status(const CameraServer::CaptureStatusCallback& callback)
+{
+    return _capture_status_callbacks.subscribe(callback);
+}
+void CameraServerImpl::unsubscribe_capture_status(CameraServer::CaptureStatusHandle handle)
+{
+    _capture_status_callbacks.unsubscribe(handle);
+}
+
+CameraServer::Result
+CameraServerImpl::respond_capture_status(CameraServer::CaptureStatus capture_status) const
+{
+    uint8_t image_status{};
+    if (capture_status.image_status ==
+            CameraServer::CaptureStatus::ImageStatus::CaptureInProgress ||
+        capture_status.image_status ==
+            CameraServer::CaptureStatus::ImageStatus::IntervalInProgress) {
+        image_status |= StatusFlags::IN_PROGRESS;
+    }
+
+    if (capture_status.image_status == CameraServer::CaptureStatus::ImageStatus::IntervalIdle ||
+        capture_status.image_status ==
+            CameraServer::CaptureStatus::ImageStatus::IntervalInProgress) {
+        image_status |= StatusFlags::INTERVAL_SET;
+    }
+
+    uint8_t video_status = 0;
+    if (capture_status.video_status == CameraServer::CaptureStatus::VideoStatus::Idle) {
+        video_status = 0;
+    } else if (
+        capture_status.video_status ==
+        CameraServer::CaptureStatus::VideoStatus::CaptureInProgress) {
+        video_status = 1;
+    }
+    const uint32_t recording_time_ms =
+        static_cast<uint32_t>(static_cast<double>(capture_status.recording_time_s) * 1e3);
+    const float available_capacity = capture_status.available_capacity;
+
+    mavlink_message_t msg{};
+    mavlink_msg_camera_capture_status_pack(
+        _server_component_impl->get_own_system_id(),
+        _server_component_impl->get_own_component_id(),
+        &msg,
+        static_cast<uint32_t>(_server_component_impl->get_time().elapsed_s() * 1e3),
+        image_status,
+        video_status,
+        _image_capture_timer_interval_s,
+        recording_time_ms,
+        available_capacity,
+        _image_capture_count);
+
+    _server_component_impl->send_message(msg);
+}
+
 /**
  * Starts capturing images with the given interval.
  * @param [in]  interval_s      The interval between captures in seconds.
@@ -603,6 +652,11 @@ std::optional<mavlink_message_t> CameraServerImpl::process_storage_information_r
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
 
+    // ack needs to be sent before stroage information message
+    auto ack_msg =
+        _server_component_impl->make_command_ack_message(command, MAV_RESULT::MAV_RESULT_ACCEPTED);
+    _server_component_impl->send_message(ack_msg);
+
     _last_storage_id = storage_id;
     _storage_information_callbacks(storage_id);
 
@@ -637,45 +691,20 @@ std::optional<mavlink_message_t> CameraServerImpl::process_camera_capture_status
             command, MAV_RESULT::MAV_RESULT_ACCEPTED);
     }
 
-    // ack needs to be sent before camera information message
+    if (_capture_status_callbacks.empty()) {
+        LogDebug() << "process camera capture status requested with no capture status subscriber";
+        return _server_component_impl->make_command_ack_message(
+            command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
+    }
+
+    // ack needs to be sent before camera capture status message
     auto ack_msg =
         _server_component_impl->make_command_ack_message(command, MAV_RESULT::MAV_RESULT_ACCEPTED);
     _server_component_impl->send_message(ack_msg);
 
-    // FIXME: why is this needed to prevent dropping messages?
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    _capture_status_callbacks(0);
 
-    uint8_t image_status{};
-
-    if (_is_image_capture_in_progress) {
-        image_status |= StatusFlags::IN_PROGRESS;
-    }
-
-    if (_is_image_capture_interval_set) {
-        image_status |= StatusFlags::INTERVAL_SET;
-    }
-
-    // unsupported
-    const uint8_t video_status = 0;
-    const uint32_t recording_time_ms = 0;
-    const float available_capacity = 0;
-
-    mavlink_message_t msg{};
-    mavlink_msg_camera_capture_status_pack(
-        _server_component_impl->get_own_system_id(),
-        _server_component_impl->get_own_component_id(),
-        &msg,
-        static_cast<uint32_t>(_server_component_impl->get_time().elapsed_s() * 1e3),
-        image_status,
-        video_status,
-        _image_capture_timer_interval_s,
-        recording_time_ms,
-        available_capacity,
-        _image_capture_count);
-
-    _server_component_impl->send_message(msg);
-
-    // ack was already sent
+    // result will return in respond_capture_status
     return std::nullopt;
 }
 
