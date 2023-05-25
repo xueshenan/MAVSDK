@@ -1,6 +1,7 @@
 #include <chrono>
 #include <future>
 #include <iostream>
+#include <thread>
 
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/camera/camera.h>
@@ -54,7 +55,10 @@ int main(int argc, const char* argv[])
         std::cout << status << std::endl;
     });
 
-    auto operation_result = camera.take_photo();
+    auto operation_result = camera.format_storage();
+    std::cout << "format storage result : " << result << std::endl;
+
+    operation_result = camera.take_photo();
     std::cout << "take photo result : " << result << std::endl;
 
     operation_result = camera.start_video();
