@@ -60,8 +60,8 @@ int main(int argc, const char* argv[])
     operation_result = camera.start_video();
     std::cout << "start video result : " << operation_result << std::endl;
 
-    operation_result = camera.stop_video();
-    std::cout << "stop video result : " << operation_result << std::endl;
+    // operation_result = camera.stop_video();
+    // std::cout << "stop video result : " << operation_result << std::endl;
 
     operation_result = camera.start_video_streaming();
     std::cout << "start video streaming result : " << operation_result << std::endl;

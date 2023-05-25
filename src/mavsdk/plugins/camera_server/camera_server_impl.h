@@ -15,7 +15,6 @@ public:
     void deinit() override;
 
     CameraServer::Result set_information(CameraServer::Information information);
-    CameraServer::Result set_in_progress(bool in_progress);
 
     CameraServer::TakePhotoHandle
     subscribe_take_photo(const CameraServer::TakePhotoCallback& callback);
@@ -51,6 +50,11 @@ public:
     CameraServer::Result
     respond_storage_information(CameraServer::StorageInformation storage_information) const;
 
+    CameraServer::CaptureStatusHandle
+    subscribe_capture_status(const CameraServer::CaptureStatusCallback& callback);
+    void unsubscribe_capture_status(CameraServer::CaptureStatusHandle handle);
+    CameraServer::Result respond_capture_status(CameraServer::CaptureStatus capture_status) const;
+
 private:
     enum StatusFlags {
         IN_PROGRESS = 1 << 0,
@@ -67,8 +71,6 @@ private:
     CameraServer::Information _information{};
 
     // CAMERA_CAPTURE_STATUS fields
-    // TODO: how do we keep this info in sync between plugin instances?
-    bool _is_image_capture_in_progress{};
     bool _is_image_capture_interval_set{};
     float _image_capture_timer_interval_s{};
     void* _image_capture_timer_cookie{};
@@ -81,6 +83,7 @@ private:
     CallbackList<int32_t> _stop_video_streaming_callbacks{};
     CallbackList<CameraServer::CameraMode> _set_camera_mode_callbacks{};
     CallbackList<int32_t> _storage_information_callbacks{};
+    CallbackList<int32_t> _capture_status_callbacks{};
 
     MavlinkCommandReceiver::CommandLong _last_take_photo_command;
 

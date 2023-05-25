@@ -293,6 +293,69 @@ public:
     operator<<(std::ostream& str, CameraServer::StorageInformation const& storage_information);
 
     /**
+     * @brief
+     */
+    struct CaptureStatus {
+        /**
+         * @brief
+         */
+        enum class ImageStatus {
+            Idle, /**< @brief idle. */
+            CaptureInProgress, /**< @brief capture in progress. */
+            IntervalIdle, /**< @brief interval set but idle. */
+            IntervalInProgress, /**< @brief interval set and capture in progress). */
+        };
+
+        /**
+         * @brief Stream operator to print information about a `CameraServer::ImageStatus`.
+         *
+         * @return A reference to the stream.
+         */
+        friend std::ostream&
+        operator<<(std::ostream& str, CameraServer::CaptureStatus::ImageStatus const& image_status);
+
+        /**
+         * @brief
+         */
+        enum class VideoStatus {
+            Idle, /**< @brief idle. */
+            CaptureInProgress, /**< @brief capture in progress. */
+        };
+
+        /**
+         * @brief Stream operator to print information about a `CameraServer::VideoStatus`.
+         *
+         * @return A reference to the stream.
+         */
+        friend std::ostream&
+        operator<<(std::ostream& str, CameraServer::CaptureStatus::VideoStatus const& video_status);
+
+        float image_interval{}; /**< @brief Image capture interval (in s) */
+        float recording_time_s{}; /**< @brief Elapsed time since recording started (in s) */
+        float available_capacity{}; /**< @brief Available storage capacity. (in MiB) */
+        ImageStatus image_status{}; /**< @brief Current status of image capturing */
+        VideoStatus video_status{}; /**< @brief Current status of video capturing */
+        int32_t image_count{}; /**< @brief Total number of images captured ('forever', or until
+                                  reset using MAV_CMD_STORAGE_FORMAT) */
+    };
+
+    /**
+     * @brief Equal operator to compare two `CameraServer::CaptureStatus` objects.
+     *
+     * @return `true` if items are equal.
+     */
+    friend bool
+    operator==(const CameraServer::CaptureStatus& lhs, const CameraServer::CaptureStatus& rhs);
+
+    /**
+     * @brief Stream operator to print information about a `CameraServer::CaptureStatus`.
+     *
+     * @return A reference to the stream.
+     */
+    friend std::ostream&
+    operator<<(std::ostream& str, CameraServer::CaptureStatus const& capture_status);
+
+    /**
      * @brief Callback type for asynchronous CameraServer calls.
      */
     using ResultCallback = std::function<void(Result)>;
@@ -306,16 +369,6 @@ public:
      * @return Result of request.
      */
     Result set_information(Information information) const;
-
-    /**
-     * @brief Sets image capture in progress status flags. This should be set to true when the
-     * camera is busy taking a photo and false when it is done.
-     *
-     * This function is blocking.
-     *
-     * @return Result of request.
-     */
-    Result set_in_progress(bool in_progress) const;
 
     /**
      * @brief Callback type for subscribe_take_photo.
@@ -467,7 +520,7 @@ public:
 
     /**
      * @brief Subscribe to camera storage information requests. Each request received should
-     * response to using SetCameraModeResponse
+     * response to using StorageInformationResponse
      */
     StorageInformationHandle
     subscribe_storage_information(const StorageInformationCallback& callback);
@@ -485,6 +538,36 @@ public:
      * @return Result of request.
      */
     Result respond_storage_information(StorageInformation storage_information) const;
+
+    /**
+     * @brief Callback type for subscribe_capture_status.
+     */
+    using CaptureStatusCallback = std::function<void(int32_t)>;
+
+    /**
+     * @brief Handle type for subscribe_capture_status.
+     */
+    using CaptureStatusHandle = Handle<int32_t>;
+
+    /**
+     * @brief Subscribe to camera capture status requests. Each request received should response to
+     * using CaptureStatusResponse
+     */
+    CaptureStatusHandle subscribe_capture_status(const CaptureStatusCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_capture_status
+     */
+    void unsubscribe_capture_status(CaptureStatusHandle handle);
+
+    /**
+     * @brief Respond to camera capture status from SubscribeCaptureStatus.
+     *
+     * This function is blocking.
+     *
+     * @return Result of request.
+     */
+    Result respond_capture_status(CaptureStatus capture_status) const;
 
     /**
      * @brief Copy constructor.

@@ -1,5 +1,7 @@
 #include <iostream>
 #include <thread>
+#include <chrono>
+
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/camera_server/camera_server.h>
 
@@ -22,45 +24,52 @@ int main(int argc, char** argv)
 
     // First add all subscriptions. This defines the camera capabilities.
 
-    camera_server.subscribe_take_photo([&camera_server](int32_t index) {
-        camera_server.set_in_progress(true);
+    bool is_capture_in_progress = false;
+    int32_t image_count = 0;
+    camera_server.subscribe_take_photo(
+        [&camera_server, &is_capture_in_progress, &image_count](int32_t index) {
+            std::cout << "taking a picture (" << +index << ")..." << std::endl;
 
-        std::cout << "taking a picture (" << +index << ")..." << std::endl;
+            is_capture_in_progress = true;
+            // TODO : actually capture image here
+            // simulating with delay
+            std::this_thread::sleep_for(std::chrono::milliseconds(500));
 
-        // TODO : actually capture image here
-        // simulating with delay
-        std::this_thread::sleep_for(std::chrono::milliseconds(500));
+            // TODO: populate with telemetry data
+            auto position = mavsdk::CameraServer::Position{};
+            auto attitude = mavsdk::CameraServer::Quaternion{};
 
-        // TODO: populate with telemetry data
-        auto position = mavsdk::CameraServer::Position{};
-        auto attitude = mavsdk::CameraServer::Quaternion{};
+            auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                                 std::chrono::system_clock::now().time_since_epoch())
+                                 .count();
+            auto success = true;
+            camera_server.respond_take_photo(
+                mavsdk::CameraServer::TakePhotoFeedback::Ok,
+                mavsdk::CameraServer::CaptureInfo{
+                    .position = position,
+                    .attitude_quaternion = attitude,
+                    .time_utc_us = static_cast<uint64_t>(timestamp),
+                    .is_success = success,
+                    .index = index,
+                    .file_url = {},
+                });
+            is_capture_in_progress = false;
+            image_count++;
+        });
 
-        auto timestamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-                             std::chrono::system_clock::now().time_since_epoch())
-                             .count();
-        auto success = true;
+    std::chrono::steady_clock::time_point start_video_time;
+    bool is_recording_video = false;
+    camera_server.subscribe_start_video(
+        [&start_video_time, &is_recording_video](int32_t stream_id) {
+            std::cout << "Start video record" << std::endl;
+            is_recording_video = true;
+            start_video_time = std::chrono::steady_clock::now();
+        });
 
-        camera_server.set_in_progress(false);
-
-        camera_server.respond_take_photo(
-            mavsdk::CameraServer::TakePhotoFeedback::Ok,
-            mavsdk::CameraServer::CaptureInfo{
-                .position = position,
-                .attitude_quaternion = attitude,
-                .time_utc_us = static_cast<uint64_t>(timestamp),
-                .is_success = success,
-                .index = index,
-                .file_url = {},
-            });
+    camera_server.subscribe_stop_video([&is_recording_video](int32_t stream_id) {
+        std::cout << "Stop video record" << std::endl;
+        is_recording_video = false;
     });
-
-    camera_server.subscribe_start_video([](int32_t stream_id) {
-        std::cout << "Start video record" << std::endl;
-        // camera_server.respond_start_video();
-    });
-
-    camera_server.subscribe_stop_video(
-        [](int32_t stream_id) { std::cout << "Stop video record" << std::endl; });
 
     camera_server.subscribe_start_video_streaming(
         [](int32_t stream_id) { std::cout << "Start video streaming" << std::endl; });
@@ -86,12 +95,31 @@ int main(int argc, char** argv)
 
         camera_server.respond_storage_information(storage_information);
     });
+
+    camera_server.subscribe_capture_status([&camera_server,
+                                            &image_count,
+                                            &is_capture_in_progress,
+                                            &is_recording_video,
+                                            &start_video_time](int32_t reserved) {
+        mavsdk::CameraServer::CaptureStatus capture_status;
+        capture_status.image_count = image_count;
+        capture_status.image_status =
+            is_capture_in_progress ?
+                mavsdk::CameraServer::CaptureStatus::ImageStatus::CaptureInProgress :
+                mavsdk::CameraServer::CaptureStatus::ImageStatus::Idle;
+        capture_status.video_status =
+            is_recording_video ?
+                mavsdk::CameraServer::CaptureStatus::VideoStatus::CaptureInProgress :
+                mavsdk::CameraServer::CaptureStatus::VideoStatus::Idle;
+        auto current_time = std::chrono::steady_clock::now();
+        if (is_recording_video) {
+            capture_status.recording_time_s =
+                std::chrono::duration_cast<std::chrono::seconds>(current_time - start_video_time)
+                    .count();
+        }
+        camera_server.respond_capture_status(capture_status);
+    });
     // Then set the initial state of everything.
-
-    // TODO: this state is not guaranteed, e.g. a new system appears
-    // while a capture is in progress
-    camera_server.set_in_progress(false);
-
     // Finally call set_information() to "activate" the camera plugin.
 
     auto ret = camera_server.set_information({
