@@ -57,7 +57,9 @@ TEST(SystemTest, ParamCustomSetAndGet)
     const auto data = generate_uppercase_ascii(128);
 
     // Make it available.
-    EXPECT_EQ(param_server.provide_param_custom(param_name, data), ParamServer::Result::Success);
+    EXPECT_EQ(
+        param_server.provide_param_custom(param_name, data, ParamServer::ValueType::StringType),
+        ParamServer::Result::Success);
 
     // Now it should be available
     auto result_pair = param.get_param_custom(param_name);
@@ -119,7 +121,9 @@ TEST(SystemTest, ParamCustomSetAndGetLossy)
     const auto data = generate_uppercase_ascii(128);
 
     // Make it available.
-    EXPECT_EQ(param_server.provide_param_custom(param_name, data), ParamServer::Result::Success);
+    EXPECT_EQ(
+        param_server.provide_param_custom(param_name, data, ParamServer::ValueType::StringType),
+        ParamServer::Result::Success);
 
     // Now it should be available
     auto result_pair = param.get_param_custom(param_name);

@@ -4,6 +4,7 @@
 
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/camera_server/camera_server.h>
+#include <mavsdk/plugins/param_server/param_server.h>
 
 int main(int argc, char** argv)
 {
@@ -19,11 +20,149 @@ int main(int argc, char** argv)
     }
     std::cout << "Created camera server connection" << std::endl;
 
-    auto camera_server = mavsdk::CameraServer{
-        mavsdk.server_component_by_type(mavsdk::Mavsdk::ServerComponentType::Camera)};
+    auto server_component =
+        mavsdk.server_component_by_type(mavsdk::Mavsdk::ServerComponentType::Camera);
+    auto camera_server = mavsdk::CameraServer{server_component};
+    auto param_server = mavsdk::ParamServer{server_component};
+
+    param_server.provide_param_custom("CAM_EV", "1.0", mavsdk::ParamServer::ValueType::FloatType);
+    param_server.subscribe_param_changed_async(
+        "CAM_EV", mavsdk::ParamServer::ValueType::FloatType, [](std::string value) {
+            std::cout << "change CAM_EV to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_CUSTOMWB", "5500", mavsdk::ParamServer::ValueType::Uint16Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_CUSTOMWB", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_CUSTOMWB to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_SPOTAREA", "0", mavsdk::ParamServer::ValueType::Uint16Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_SPOTAREA", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_SPOTAREA to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_ASPECTRATIO", "1.777777", mavsdk::ParamServer::ValueType::FloatType);
+    param_server.subscribe_param_changed_async(
+        "CAM_ASPECTRATIO", mavsdk::ParamServer::ValueType::FloatType, [](std::string value) {
+            std::cout << "change CAM_ASPECTRATIO to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_PHOTOQUAL", "1", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_PHOTOQUAL", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_PHOTOQUAL to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_FILENUMOPT", "0", mavsdk::ParamServer::ValueType::Uint8Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_FILENUMOPT", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_FILENUMOPT to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_PHOTOFMT", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_PHOTOFMT", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_PHOTOFMT to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom("CAM_MODE", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_MODE", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_MODE to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_FLICKER", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_FLICKER", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_FLICKER to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_SHUTTERSPD", "0.01", mavsdk::ParamServer::ValueType::FloatType);
+    param_server.subscribe_param_changed_async(
+        "CAM_SHUTTERSPD", mavsdk::ParamServer::ValueType::FloatType, [](std::string value) {
+            std::cout << "change CAM_SHUTTERSPD to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_WBMODE", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_WBMODE", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_WBMODE to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_COLORENCODE", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_COLORENCODE", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_COLORENCODE to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_EXPMODE", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_EXPMODE", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_EXPMODE to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom("CAM_ISO", "100", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_ISO", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_ISO to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_VIDRES", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_VIDRES", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_VIDRES to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_IMAGEDEWARP", "0", mavsdk::ParamServer::ValueType::Uint8Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_IMAGEDEWARP", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_IMAGEDEWARP to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_PHOTORATIO", "1", mavsdk::ParamServer::ValueType::Uint8Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_PHOTORATIO", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_PHOTORATIO to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_VIDFMT", "1", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_VIDFMT", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_VIDFMT to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_METERING", "0", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_METERING", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_METERING to " << value << std::endl;
+        });
+
+    param_server.provide_param_custom(
+        "CAM_COLORMODE", "1", mavsdk::ParamServer::ValueType::Uint32Type);
+    param_server.subscribe_param_changed_async(
+        "CAM_COLORMODE", mavsdk::ParamServer::ValueType::Uint16Type, [](std::string value) {
+            std::cout << "change CAM_COLORMODE to " << value << std::endl;
+        });
 
     // First add all subscriptions. This defines the camera capabilities.
-
     bool is_capture_in_progress = false;
     int32_t image_count = 0;
     camera_server.subscribe_take_photo(
@@ -140,8 +279,9 @@ int main(int argc, char** argv)
         .horizontal_resolution_px = 3280,
         .vertical_resolution_px = 2464,
         .lens_id = 0,
-        .definition_file_version = 0, // TODO: add this
-        .definition_file_uri = "", // TODO: implement this using MAVLink FTP
+        .definition_file_version = 1,
+        .definition_file_uri =
+            "http://10.212.141.63/e90.xml", // TODO: implement this using MAVLink FTP
     });
 
     if (ret != mavsdk::CameraServer::Result::Success) {
