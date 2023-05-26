@@ -2,9 +2,24 @@
 #include <future>
 #include <iostream>
 #include <thread>
+#include <vector>
 
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/camera/camera.h>
+
+static inline void
+SetCameraSettings(mavsdk::Camera& camera, const std::string& name, const std::string& value)
+{
+    mavsdk::Camera::Setting setting;
+    setting.setting_id = name;
+    setting.option.option_id = value;
+    auto operation_result = camera.set_setting(setting);
+    std::cout << "set " << name << " value : " << value << " result : " << operation_result
+              << std::endl;
+
+    auto pair = camera.get_setting(setting);
+    std::cout << pair.first << " " << pair.second << std::endl;
+}
 
 int main(int argc, const char* argv[])
 {
@@ -78,6 +93,47 @@ int main(int argc, const char* argv[])
 
     operation_result = camera.set_mode(mavsdk::Camera::Mode::Video);
     std::cout << "Set camera to video mode result : " << operation_result << std::endl;
+
+    // camera.subscribe_current_settings([](std::vector<mavsdk::Camera::Setting> settings) {
+    //     std::cout << "Retrive camera settings : " << std::endl;
+    //     for (auto& setting : settings) {
+    //         std::cout << setting << std::endl;
+    //     }
+    // });
+
+    SetCameraSettings(camera, "CAM_EV", "2.0");
+
+    SetCameraSettings(camera, "CAM_CUSTOMWB", "6000");
+
+    SetCameraSettings(camera, "CAM_SPOTAREA", "2");
+
+    SetCameraSettings(camera, "CAM_ASPECTRATIO", "1.333333");
+
+    SetCameraSettings(camera, "CAM_PHOTOQUAL", "2");
+
+    SetCameraSettings(camera, "CAM_FILENUMOPT", "1");
+
+    SetCameraSettings(camera, "CAM_PHOTOFMT", "2");
+
+    SetCameraSettings(camera, "CAM_EXPMODE", "1");
+    SetCameraSettings(camera, "CAM_SHUTTERSPD", "0.002083333");
+
+    SetCameraSettings(camera, "CAM_WBMODE", "99");
+
+    SetCameraSettings(camera, "CAM_ISO", "6400");
+
+    camera.set_mode(mavsdk::Camera::Mode::Video);
+    SetCameraSettings(camera, "CAM_VIDRES", "30");
+
+    SetCameraSettings(camera, "CAM_IMAGEDEWARP", "1");
+
+    camera.set_mode(mavsdk::Camera::Mode::Photo);
+    SetCameraSettings(camera, "CAM_PHOTORATIO", "3");
+
+    SetCameraSettings(camera, "CAM_EXPMODE", "0");
+    SetCameraSettings(camera, "CAM_METERING", "2");
+
+    SetCameraSettings(camera, "CAM_COLORMODE", "5");
 
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));

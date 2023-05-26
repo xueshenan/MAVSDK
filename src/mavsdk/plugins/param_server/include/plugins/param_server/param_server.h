@@ -46,6 +46,31 @@ public:
     ~ParamServer() override;
 
     /**
+     * @brief
+     */
+    enum class ValueType {
+        StringType, /**< @brief string type (default). */
+        Int8Type, /**< @brief int8_t type. */
+        Uint8Type, /**< @brief uint8_t type. */
+        Int16Type, /**< @brief int16_t type. */
+        Uint16Type, /**< @brief uint16_t type. */
+        Int32Type, /**< @brief int32_t type. */
+        Uint32Type, /**< @brief uint32_t type. */
+        Int64Type, /**< @brief int64_t type. */
+        Uint64Type, /**< @brief uint64_t type. */
+        FloatType, /**< @brief float type. */
+        DoubleType, /**< @brief double type. */
+        CustomType, /**< @brief custom type. */
+    };
+
+    /**
+     * @brief Stream operator to print information about a `ParamServer::ValueType`.
+     *
+     * @return A reference to the stream.
+     */
+    friend std::ostream& operator<<(std::ostream& str, ParamServer::ValueType const& value_type);
+
+    /**
      * @brief Type for integer parameters.
      */
     struct IntParam {
@@ -228,7 +253,7 @@ public:
      *
      * @return Result of request.
      */
-    Result provide_param_custom(std::string name, std::string value) const;
+    Result provide_param_custom(std::string name, std::string value, ValueType value_type) const;
 
     /**
      * @brief Retrieve all parameters.
@@ -238,6 +263,19 @@ public:
      * @return Result of request.
      */
     ParamServer::AllParams retrieve_all_params() const;
+
+    /**
+     * @brief Callback type for subscribe_param_changed_async.
+     */
+    using SubscribeParamChangedCallback = std::function<void(std::string)>;
+
+    /**
+     * @brief Subscribe param changed
+     *
+     * This function is non-blocking.
+     */
+    void subscribe_param_changed_async(
+        std::string name, ValueType type, const SubscribeParamChangedCallback callback);
 
     /**
      * @brief Copy constructor.

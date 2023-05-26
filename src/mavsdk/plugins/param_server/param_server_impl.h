@@ -1,4 +1,5 @@
 #pragma once
+#include <unordered_map>
 
 #include "plugins/param_server/param_server.h"
 #include "server_plugin_impl_base.h"
@@ -24,14 +25,22 @@ public:
 
     std::pair<ParamServer::Result, std::string> retrieve_param_custom(std::string name) const;
 
-    ParamServer::Result provide_param_custom(std::string name, const std::string& value);
+    ParamServer::Result provide_param_custom(
+        std::string name, std::string value, ParamServer::ValueType value_type) const;
 
     ParamServer::AllParams retrieve_all_params() const;
+
+    void subscribe_param_changed_async(
+        std::string name,
+        ParamServer::ValueType type,
+        const ParamServer::SubscribeParamChangedCallback callback);
 
     static ParamServer::Result
     result_from_mavlink_parameter_server_result(MavlinkParameterServer::Result result);
 
 private:
+    std::unordered_map<std::string, ParamServer::SubscribeParamChangedCallback>
+        _param_changed_callback_map;
 };
 
 } // namespace mavsdk
