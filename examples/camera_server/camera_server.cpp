@@ -259,8 +259,9 @@ int main(int argc, char** argv)
         camera_server.respond_capture_status(capture_status);
     });
 
-    camera_server.subscribe_format_storage(
-        [](int storage_id) { std::cout << "format storage" << std::endl; });
+    camera_server.subscribe_format_storage([](int storage_id) {
+        std::cout << "format storage with id : " << storage_id << std::endl;
+    });
 
     camera_server.subscribe_reset_settings(
         [](int camera_id) { std::cout << "reset camera settings" << std::endl; });
