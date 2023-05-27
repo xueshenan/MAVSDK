@@ -70,7 +70,7 @@ int main(int argc, const char* argv[])
         std::cout << status << std::endl;
     });
 
-    auto operation_result = camera.format_storage();
+    auto operation_result = camera.format_storage(11);
     std::cout << "format storage result : " << result << std::endl;
 
     operation_result = camera.take_photo();
@@ -93,6 +93,9 @@ int main(int argc, const char* argv[])
 
     operation_result = camera.set_mode(mavsdk::Camera::Mode::Video);
     std::cout << "Set camera to video mode result : " << operation_result << std::endl;
+
+    operation_result = camera.reset_settings();
+    std::cout << "Reset camera settings result : " << operation_result << std::endl;
 
     // camera.subscribe_current_settings([](std::vector<mavsdk::Camera::Setting> settings) {
     //     std::cout << "Retrive camera settings : " << std::endl;
