@@ -1,6 +1,9 @@
 #include <iostream>
 #include <thread>
 #include <chrono>
+#include <future>
+#include <filesystem>
+#include <string>
 
 #include <mavsdk/mavsdk.h>
 #include <mavsdk/plugins/camera_server/camera_server.h>
@@ -265,11 +268,9 @@ int main(int argc, char** argv)
 
     camera_server.subscribe_reset_settings(
         [](int camera_id) { std::cout << "reset camera settings" << std::endl; });
-
     // Then set the initial state of everything.
 
     // Finally call set_information() to "activate" the camera plugin.
-
     auto ret = camera_server.set_information({
         .vendor_name = "MAVSDK",
         .model_name = "Example Camera Server",
@@ -281,8 +282,7 @@ int main(int argc, char** argv)
         .vertical_resolution_px = 2464,
         .lens_id = 0,
         .definition_file_version = 1,
-        .definition_file_uri =
-            "http://10.212.141.63/e90.xml", // TODO: implement this using MAVLink FTP
+        .definition_file_uri = "ftp://90.xml", // for mavlink ftp test
     });
 
     if (ret != mavsdk::CameraServer::Result::Success) {

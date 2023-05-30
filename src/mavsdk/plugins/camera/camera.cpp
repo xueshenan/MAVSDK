@@ -264,6 +264,11 @@ Camera::Result Camera::reset_settings() const
     return _impl->reset_settings();
 }
 
+Camera::Result Camera::set_definition_file_data(std::string definition_file_data) const
+{
+    return _impl->set_definition_file_data(definition_file_data);
+}
+
 std::ostream& operator<<(std::ostream& str, Camera::Result const& result)
 {
     switch (result) {
