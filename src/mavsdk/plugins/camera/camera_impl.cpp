@@ -605,7 +605,7 @@ CameraImpl::subscribe_information(const Camera::InformationCallback& callback)
     if (callback) {
         if (_status.call_every_cookie == nullptr) {
             _system_impl->add_call_every(
-                [this]() { request_status(); }, 5.0, &_status.call_every_cookie);
+                [this]() { request_status(); }, 1.0, &_status.call_every_cookie);
         }
     } else {
         _system_impl->remove_call_every(_status.call_every_cookie);
@@ -1195,8 +1195,9 @@ void CameraImpl::process_camera_information(const mavlink_message_t& message)
 
 bool CameraImpl::should_fetch_camera_definition(const std::string& uri) const
 {
-    return !uri.empty() && !_camera_definition && !_is_fetching_camera_definition &&
-           !_has_camera_definition_timed_out;
+    // just ignore mavlink ftp protocol
+    return !uri.empty() && uri.find("ftp") != 0 && !_camera_definition &&
+           !_is_fetching_camera_definition && !_has_camera_definition_timed_out;
 }
 
 bool CameraImpl::fetch_camera_definition(
@@ -1215,13 +1216,18 @@ bool CameraImpl::fetch_camera_definition(
 bool CameraImpl::download_definition_file(
     const std::string& uri, std::string& camera_definition_out)
 {
-    HttpLoader http_loader;
-    LogInfo() << "Downloading camera definition from: " << uri;
-    if (!http_loader.download_text_sync(uri, camera_definition_out)) {
-        LogErr() << "Failed to download camera definition.";
+    if (uri.find("http") == 0) { // use http loader download
+        HttpLoader http_loader;
+        LogInfo() << "Downloading camera definition from: " << uri;
+        if (!http_loader.download_text_sync(uri, camera_definition_out)) {
+            LogErr() << "Failed to download camera definition.";
+            return false;
+        }
+        return true;
+    } else if (uri.size() > 0) {
+        LogErr() << "Invalid definition file uri " << uri;
         return false;
     }
-
     return true;
 }
 
@@ -1998,6 +2004,21 @@ void CameraImpl::reset_settings_async(const Camera::ResultCallback callback)
                 callback(camera_result);
             });
         });
+}
+
+Camera::Result CameraImpl::set_definition_file_data(std::string definition_file_data)
+{
+    std::lock_guard<std::mutex> lock(_information.mutex);
+    if (_camera_definition || _is_fetching_camera_definition) {
+        return Camera::Result::Denied;
+    }
+
+    _camera_definition.reset(new CameraDefinition());
+    if (!_camera_definition->load_string(definition_file_data)) {
+        return Camera::Result::WrongArgument;
+    }
+    refresh_params();
+    return Camera::Result::Success;
 }
 
 void CameraImpl::reset_following_format_storage()

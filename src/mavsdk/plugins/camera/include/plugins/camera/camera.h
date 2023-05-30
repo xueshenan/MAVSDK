@@ -920,6 +920,22 @@ public:
     Result reset_settings() const;
 
     /**
+     * @brief Manual set the definition file data
+     *
+     * The camera will use the definition file data to config the camera
+     * The camera already support http protocol to download definition file
+     * But we want to support mavlink ftp way to download file too.
+     * We donot want the camera to use file system to maintain the definition file.
+     * So we use mavlink ftp to downlaod the definition file first,
+     * and read the definition file data set to camera.
+     *
+     * This function is blocking.
+     *
+     * @return Result of request.
+     */
+    Result set_definition_file_data(std::string definition_file_data) const;
+
+    /**
      * @brief Copy constructor.
      */
     Camera(const Camera& other);

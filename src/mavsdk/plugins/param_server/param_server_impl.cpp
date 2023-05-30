@@ -169,7 +169,7 @@ void ParamServerImpl::subscribe_param_changed_async(
         case ParamServer::ValueType::Int64Type:
             _server_component_impl->mavlink_parameter_server().subscribe_param_changed<int>(
                 name,
-                [&, c_name](int value) {
+                [this, c_name](int value) {
                     _param_changed_callback_map[c_name](std::to_string(value));
                 },
                 nullptr);
@@ -178,7 +178,7 @@ void ParamServerImpl::subscribe_param_changed_async(
         case ParamServer::ValueType::DoubleType:
             _server_component_impl->mavlink_parameter_server().subscribe_param_changed<float>(
                 name,
-                [&, c_name](float value) {
+                [this, c_name](float value) {
                     _param_changed_callback_map[c_name](std::to_string(value));
                 },
                 nullptr);
@@ -186,7 +186,7 @@ void ParamServerImpl::subscribe_param_changed_async(
         case ParamServer::ValueType::StringType:
             _server_component_impl->mavlink_parameter_server().subscribe_param_changed<std::string>(
                 name,
-                [&, c_name](std::string value) { _param_changed_callback_map[c_name](value); },
+                [this, c_name](std::string value) { _param_changed_callback_map[c_name](value); },
                 nullptr);
             break;
         case ParamServer::ValueType::CustomType:

@@ -92,6 +92,8 @@ public:
     Camera::Result reset_settings();
     void reset_settings_async(const Camera::ResultCallback callback);
 
+    Camera::Result set_definition_file_data(std::string definition_file_data);
+
     std::pair<Camera::Result, std::vector<Camera::CaptureInfo>>
     list_photos(Camera::PhotosRange photos_range);
     void
