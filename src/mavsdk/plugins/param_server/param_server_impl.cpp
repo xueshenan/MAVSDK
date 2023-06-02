@@ -74,43 +74,43 @@ ParamServerImpl::retrieve_param_custom(std::string name) const
 }
 
 ParamServer::Result ParamServerImpl::provide_param_custom(
-    std::string name, std::string value, ParamServer::ValueType value_type) const
+    std::string name, std::string value, ParamServer::Type value_type) const
 {
     if (name.size() > 16) {
         return ParamServer::Result::ParamNameTooLong;
     }
 
-    // TODO : don't want to change the core compont so use the xml format
+    // TODO: don't want to change the core compont so use the xml format
     std::string xml_type_string = "";
     switch (value_type) {
-        case ParamServer::ValueType::Uint8Type:
+        case ParamServer::Type::Uint8:
             xml_type_string = "uint8";
             break;
-        case ParamServer::ValueType::Int8Type:
+        case ParamServer::Type::Int8:
             xml_type_string = "int8";
             break;
-        case ParamServer::ValueType::Uint16Type:
+        case ParamServer::Type::Uint16:
             xml_type_string = "uint16";
             break;
-        case ParamServer::ValueType::Int16Type:
+        case ParamServer::Type::Int16:
             xml_type_string = "int16";
             break;
-        case ParamServer::ValueType::Uint32Type:
+        case ParamServer::Type::Uint32:
             xml_type_string = "uint32";
             break;
-        case ParamServer::ValueType::Int32Type:
+        case ParamServer::Type::Int32:
             xml_type_string = "int32";
             break;
-        case ParamServer::ValueType::Uint64Type:
+        case ParamServer::Type::Uint64:
             xml_type_string = "uint64";
             break;
-        case ParamServer::ValueType::Int64Type:
+        case ParamServer::Type::Int64:
             xml_type_string = "int64";
             break;
-        case ParamServer::ValueType::FloatType:
+        case ParamServer::Type::Float:
             xml_type_string = "float";
             break;
-        case ParamServer::ValueType::DoubleType:
+        case ParamServer::Type::Double:
             xml_type_string = "double";
             break;
         default:
@@ -150,23 +150,21 @@ ParamServer::AllParams ParamServerImpl::retrieve_all_params() const
     return res;
 }
 
-void ParamServerImpl::subscribe_param_changed_async(
-    std::string name,
-    ParamServer::ValueType type,
-    const ParamServer::SubscribeParamChangedCallback callback)
+ParamServer::ParamChangedHandle ParamServerImpl::subscribe_param_changed(
+    std::string name, ParamServer::Type type, const ParamServer::ParamChangedCallback callback)
 {
     _param_changed_callback_map[name] = callback;
     std::string c_name = name;
-    // TODO ugly code, need change
+    // TODO: ugly code, need change
     switch (type) {
-        case ParamServer::ValueType::Uint8Type:
-        case ParamServer::ValueType::Int8Type:
-        case ParamServer::ValueType::Uint16Type:
-        case ParamServer::ValueType::Int16Type:
-        case ParamServer::ValueType::Uint32Type:
-        case ParamServer::ValueType::Int32Type:
-        case ParamServer::ValueType::Uint64Type:
-        case ParamServer::ValueType::Int64Type:
+        case ParamServer::Type::Uint8:
+        case ParamServer::Type::Int8:
+        case ParamServer::Type::Uint16:
+        case ParamServer::Type::Int16:
+        case ParamServer::Type::Uint32:
+        case ParamServer::Type::Int32:
+        case ParamServer::Type::Uint64:
+        case ParamServer::Type::Int64:
             _server_component_impl->mavlink_parameter_server().subscribe_param_changed<int>(
                 name,
                 [this, c_name](int value) {
@@ -174,8 +172,8 @@ void ParamServerImpl::subscribe_param_changed_async(
                 },
                 nullptr);
             break;
-        case ParamServer::ValueType::FloatType:
-        case ParamServer::ValueType::DoubleType:
+        case ParamServer::Type::Float:
+        case ParamServer::Type::Double:
             _server_component_impl->mavlink_parameter_server().subscribe_param_changed<float>(
                 name,
                 [this, c_name](float value) {
@@ -183,17 +181,19 @@ void ParamServerImpl::subscribe_param_changed_async(
                 },
                 nullptr);
             break;
-        case ParamServer::ValueType::StringType:
+        case ParamServer::Type::String:
             _server_component_impl->mavlink_parameter_server().subscribe_param_changed<std::string>(
                 name,
                 [this, c_name](std::string value) { _param_changed_callback_map[c_name](value); },
                 nullptr);
             break;
-        case ParamServer::ValueType::CustomType:
+        case ParamServer::Type::Custom:
             LogErr() << "Unsupport custom value type";
             break;
     }
 }
+
+void ParamServerImpl::unsubscribe_param_changed(ParamServer::ParamChangedHandle handle) {}
 
 ParamServer::Result
 ParamServerImpl::result_from_mavlink_parameter_server_result(MavlinkParameterServer::Result result)

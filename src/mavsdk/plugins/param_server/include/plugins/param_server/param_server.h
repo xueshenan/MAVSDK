@@ -48,27 +48,27 @@ public:
     /**
      * @brief
      */
-    enum class ValueType {
-        StringType, /**< @brief string type (default). */
-        Int8Type, /**< @brief int8_t type. */
-        Uint8Type, /**< @brief uint8_t type. */
-        Int16Type, /**< @brief int16_t type. */
-        Uint16Type, /**< @brief uint16_t type. */
-        Int32Type, /**< @brief int32_t type. */
-        Uint32Type, /**< @brief uint32_t type. */
-        Int64Type, /**< @brief int64_t type. */
-        Uint64Type, /**< @brief uint64_t type. */
-        FloatType, /**< @brief float type. */
-        DoubleType, /**< @brief double type. */
-        CustomType, /**< @brief custom type. */
+    enum class Type {
+        String, /**< @brief string type (default). */
+        Int8, /**< @brief int8_t type. */
+        Uint8, /**< @brief uint8_t type. */
+        Int16, /**< @brief int16_t type. */
+        Uint16, /**< @brief uint16_t type. */
+        Int32, /**< @brief int32_t type. */
+        Uint32, /**< @brief uint32_t type. */
+        Int64, /**< @brief int64_t type. */
+        Uint64, /**< @brief uint64_t type. */
+        Float, /**< @brief float type. */
+        Double, /**< @brief double type. */
+        Custom, /**< @brief custom type. */
     };
 
     /**
-     * @brief Stream operator to print information about a `ParamServer::ValueType`.
+     * @brief Stream operator to print information about a `ParamServer::Type`.
      *
      * @return A reference to the stream.
      */
-    friend std::ostream& operator<<(std::ostream& str, ParamServer::ValueType const& value_type);
+    friend std::ostream& operator<<(std::ostream& str, ParamServer::Type const& type);
 
     /**
      * @brief Type for integer parameters.
@@ -253,7 +253,7 @@ public:
      *
      * @return Result of request.
      */
-    Result provide_param_custom(std::string name, std::string value, ValueType value_type) const;
+    Result provide_param_custom(std::string name, std::string value, Type value_type) const;
 
     /**
      * @brief Retrieve all parameters.
@@ -265,17 +265,25 @@ public:
     ParamServer::AllParams retrieve_all_params() const;
 
     /**
-     * @brief Callback type for subscribe_param_changed_async.
+     * @brief Callback type for subscribe_param_changed.
      */
-    using SubscribeParamChangedCallback = std::function<void(std::string)>;
+    using ParamChangedCallback = std::function<void(std::string)>;
+
+    /**
+     * @brief Handle type for subscribe_param_changed.
+     */
+    using ParamChangedHandle = Handle<std::string>;
 
     /**
      * @brief Subscribe param changed
-     *
-     * This function is non-blocking.
      */
-    void subscribe_param_changed_async(
-        std::string name, ValueType type, const SubscribeParamChangedCallback callback);
+    ParamChangedHandle
+    subscribe_param_changed(std::string name, Type type, const ParamChangedCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_param_changed
+     */
+    void unsubscribe_param_changed(ParamChangedHandle handle);
 
     /**
      * @brief Copy constructor.

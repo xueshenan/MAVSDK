@@ -58,7 +58,7 @@ TEST(SystemTest, ParamCustomSetAndGet)
 
     // Make it available.
     EXPECT_EQ(
-        param_server.provide_param_custom(param_name, data, ParamServer::ValueType::StringType),
+        param_server.provide_param_custom(param_name, data, ParamServer::Type::String),
         ParamServer::Result::Success);
 
     // Now it should be available
@@ -122,7 +122,7 @@ TEST(SystemTest, ParamCustomSetAndGetLossy)
 
     // Make it available.
     EXPECT_EQ(
-        param_server.provide_param_custom(param_name, data, ParamServer::ValueType::StringType),
+        param_server.provide_param_custom(param_name, data, ParamServer::Type::String),
         ParamServer::Result::Success);
 
     // Now it should be available
