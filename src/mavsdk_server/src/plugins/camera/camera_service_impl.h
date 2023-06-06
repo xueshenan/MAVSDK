@@ -1319,7 +1319,7 @@ public:
 
     grpc::Status FormatStorage(
         grpc::ServerContext* /* context */,
-        const rpc::camera::FormatStorageRequest* /* request */,
+        const rpc::camera::FormatStorageRequest* request,
         rpc::camera::FormatStorageResponse* response) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
@@ -1331,7 +1331,12 @@ public:
             return grpc::Status::OK;
         }
 
-        auto result = _lazy_plugin.maybe_plugin()->format_storage();
+        if (request == nullptr) {
+            LogWarn() << "FormatStorage sent with a null request! Ignoring...";
+            return grpc::Status::OK;
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->format_storage(request->storage_id());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);
@@ -1360,6 +1365,58 @@ public:
         }
 
         auto result = _lazy_plugin.maybe_plugin()->select_camera(request->camera_id());
+
+        if (response != nullptr) {
+            fillResponseWithResult(response, result);
+        }
+
+        return grpc::Status::OK;
+    }
+
+    grpc::Status ResetSettings(
+        grpc::ServerContext* /* context */,
+        const rpc::camera::ResetSettingsRequest* /* request */,
+        rpc::camera::ResetSettingsResponse* response) override
+    {
+        if (_lazy_plugin.maybe_plugin() == nullptr) {
+            if (response != nullptr) {
+                auto result = mavsdk::Camera::Result::NoSystem;
+                fillResponseWithResult(response, result);
+            }
+
+            return grpc::Status::OK;
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->reset_settings();
+
+        if (response != nullptr) {
+            fillResponseWithResult(response, result);
+        }
+
+        return grpc::Status::OK;
+    }
+
+    grpc::Status SetDefinitionFileData(
+        grpc::ServerContext* /* context */,
+        const rpc::camera::SetDefinitionFileDataRequest* request,
+        rpc::camera::SetDefinitionFileDataResponse* response) override
+    {
+        if (_lazy_plugin.maybe_plugin() == nullptr) {
+            if (response != nullptr) {
+                auto result = mavsdk::Camera::Result::NoSystem;
+                fillResponseWithResult(response, result);
+            }
+
+            return grpc::Status::OK;
+        }
+
+        if (request == nullptr) {
+            LogWarn() << "SetDefinitionFileData sent with a null request! Ignoring...";
+            return grpc::Status::OK;
+        }
+
+        auto result =
+            _lazy_plugin.maybe_plugin()->set_definition_file_data(request->definition_file_data());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);

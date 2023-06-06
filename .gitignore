@@ -26,3 +26,6 @@ cmake-build-*
 # mavlink repo to generate mavlink-headers
 mavlink
 mavlink-headers
+
+#clang-format cache file
+.cache

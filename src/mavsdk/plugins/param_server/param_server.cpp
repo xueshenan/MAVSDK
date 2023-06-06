@@ -48,7 +48,7 @@ ParamServer::retrieve_param_custom(std::string name) const
 }
 
 ParamServer::Result
-ParamServer::provide_param_custom(std::string name, std::string value, ValueType value_type) const
+ParamServer::provide_param_custom(std::string name, std::string value, Type value_type) const
 {
     return _impl->provide_param_custom(name, value, value_type);
 }
@@ -58,10 +58,15 @@ ParamServer::AllParams ParamServer::retrieve_all_params() const
     return _impl->retrieve_all_params();
 }
 
-void ParamServer::subscribe_param_changed_async(
-    std::string name, ValueType type, const SubscribeParamChangedCallback callback)
+ParamServer::ParamChangedHandle ParamServer::subscribe_param_changed(
+    std::string name, Type type, const ParamChangedCallback& callback)
 {
-    _impl->subscribe_param_changed_async(name, type, callback);
+    return _impl->subscribe_param_changed(name, type, callback);
+}
+
+void ParamServer::unsubscribe_param_changed(ParamChangedHandle handle)
+{
+    _impl->unsubscribe_param_changed(handle);
 }
 
 bool operator==(const ParamServer::IntParam& lhs, const ParamServer::IntParam& rhs)
@@ -161,33 +166,33 @@ std::ostream& operator<<(std::ostream& str, ParamServer::Result const& result)
     }
 }
 
-std::ostream& operator<<(std::ostream& str, ParamServer::ValueType const& value_type)
+std::ostream& operator<<(std::ostream& str, ParamServer::Type const& type)
 {
-    switch (value_type) {
-        case ParamServer::ValueType::StringType:
-            return str << "String Type";
-        case ParamServer::ValueType::Int8Type:
-            return str << "Int8 Type";
-        case ParamServer::ValueType::Uint8Type:
-            return str << "Uint8 Type";
-        case ParamServer::ValueType::Int16Type:
-            return str << "Int16 Type";
-        case ParamServer::ValueType::Uint16Type:
-            return str << "Uint16 Type";
-        case ParamServer::ValueType::Int32Type:
-            return str << "Int32 Type";
-        case ParamServer::ValueType::Uint32Type:
-            return str << "Uint32 Type";
-        case ParamServer::ValueType::Int64Type:
-            return str << "Int64 Type";
-        case ParamServer::ValueType::Uint64Type:
-            return str << "Uint64 Type";
-        case ParamServer::ValueType::FloatType:
-            return str << "Float Type";
-        case ParamServer::ValueType::DoubleType:
-            return str << "Double Type";
-        case ParamServer::ValueType::CustomType:
-            return str << "Custom Type";
+    switch (type) {
+        case ParamServer::Type::String:
+            return str << "String";
+        case ParamServer::Type::Int8:
+            return str << "Int8";
+        case ParamServer::Type::Uint8:
+            return str << "Uint8";
+        case ParamServer::Type::Int16:
+            return str << "Int16";
+        case ParamServer::Type::Uint16:
+            return str << "Uint16";
+        case ParamServer::Type::Int32:
+            return str << "Int32";
+        case ParamServer::Type::Uint32:
+            return str << "Uint32";
+        case ParamServer::Type::Int64:
+            return str << "Int64";
+        case ParamServer::Type::Uint64:
+            return str << "Uint64";
+        case ParamServer::Type::Float:
+            return str << "Float";
+        case ParamServer::Type::Double:
+            return str << "Double";
+        case ParamServer::Type::Custom:
+            return str << "Custom";
         default:
             return str << "Unknown";
     }
