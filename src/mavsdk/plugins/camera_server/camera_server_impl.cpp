@@ -329,15 +329,15 @@ void CameraServerImpl::unsubscribe_stop_video_streaming(
     return _stop_video_streaming_callbacks.unsubscribe(handle);
 }
 
-CameraServer::SetCameraModeHandle
-CameraServerImpl::subscribe_set_camera_mode(const CameraServer::SetCameraModeCallback& callback)
+CameraServer::SetModeHandle
+CameraServerImpl::subscribe_set_mode(const CameraServer::SetModeCallback& callback)
 {
-    return _set_camera_mode_callbacks.subscribe(callback);
+    return _set_mode_callbacks.subscribe(callback);
 }
 
-void CameraServerImpl::unsubscribe_set_camera_mode(CameraServer::SetCameraModeHandle handle)
+void CameraServerImpl::unsubscribe_set_mode(CameraServer::SetModeHandle handle)
 {
-    _set_camera_mode_callbacks.unsubscribe(handle);
+    _set_mode_callbacks.unsubscribe(handle);
 }
 
 CameraServer::StorageInformationHandle CameraServerImpl::subscribe_storage_information(
@@ -759,25 +759,25 @@ CameraServerImpl::process_set_camera_mode(const MavlinkCommandReceiver::CommandL
 {
     auto camera_mode = static_cast<CAMERA_MODE>(command.params.param2);
 
-    if (_set_camera_mode_callbacks.empty()) {
-        LogDebug() << "Set camera mode requested with no set camera mode subscriber";
+    if (_set_mode_callbacks.empty()) {
+        LogDebug() << "Set mode requested with no set mode subscriber";
         return _server_component_impl->make_command_ack_message(
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
 
     // convert camera mode enum type
-    CameraServer::CameraMode convert_camera_mode = CameraServer::CameraMode::Unknown;
+    CameraServer::Mode convert_camera_mode = CameraServer::Mode::Unknown;
     if (camera_mode == CAMERA_MODE_IMAGE) {
-        convert_camera_mode = CameraServer::CameraMode::Photo;
+        convert_camera_mode = CameraServer::Mode::Photo;
     } else if (camera_mode == CAMERA_MODE_VIDEO) {
-        convert_camera_mode = CameraServer::CameraMode::Video;
+        convert_camera_mode = CameraServer::Mode::Video;
     }
 
-    if (convert_camera_mode == CameraServer::CameraMode::Unknown) {
+    if (convert_camera_mode == CameraServer::Mode::Unknown) {
         return _server_component_impl->make_command_ack_message(
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
-    _set_camera_mode_callbacks(convert_camera_mode);
+    _set_mode_callbacks(convert_camera_mode);
 
     return _server_component_impl->make_command_ack_message(
         command, MAV_RESULT::MAV_RESULT_ACCEPTED);

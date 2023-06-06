@@ -4,6 +4,7 @@
 #include "plugins/param_server/param_server.h"
 #include "server_plugin_impl_base.h"
 #include "mavlink_parameter_server.h"
+#include "callback_list.h"
 
 namespace mavsdk {
 
@@ -38,6 +39,7 @@ public:
     result_from_mavlink_parameter_server_result(MavlinkParameterServer::Result result);
 
 private:
+    CallbackList<std::string> _param_changed_callback{};
     std::unordered_map<std::string, ParamServer::ParamChangedCallback> _param_changed_callback_map;
 };
 

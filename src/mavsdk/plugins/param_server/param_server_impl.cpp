@@ -191,9 +191,13 @@ ParamServer::ParamChangedHandle ParamServerImpl::subscribe_param_changed(
             LogErr() << "Unsupport custom value type";
             break;
     }
+    return _param_changed_callback.subscribe(callback);
 }
 
-void ParamServerImpl::unsubscribe_param_changed(ParamServer::ParamChangedHandle handle) {}
+void ParamServerImpl::unsubscribe_param_changed(ParamServer::ParamChangedHandle handle)
+{
+    _param_changed_callback.unsubscribe(handle);
+}
 
 ParamServer::Result
 ParamServerImpl::result_from_mavlink_parameter_server_result(MavlinkParameterServer::Result result)

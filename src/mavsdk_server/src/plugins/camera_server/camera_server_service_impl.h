@@ -82,35 +82,33 @@ public:
         }
     }
 
-    static rpc::camera_server::CameraMode
-    translateToRpcCameraMode(const mavsdk::CameraServer::CameraMode& camera_mode)
+    static rpc::camera_server::Mode translateToRpcMode(const mavsdk::CameraServer::Mode& mode)
     {
-        switch (camera_mode) {
+        switch (mode) {
             default:
-                LogErr() << "Unknown camera_mode enum value: " << static_cast<int>(camera_mode);
+                LogErr() << "Unknown mode enum value: " << static_cast<int>(mode);
             // FALLTHROUGH
-            case mavsdk::CameraServer::CameraMode::Unknown:
-                return rpc::camera_server::CAMERA_MODE_UNKNOWN;
-            case mavsdk::CameraServer::CameraMode::Photo:
-                return rpc::camera_server::CAMERA_MODE_PHOTO;
-            case mavsdk::CameraServer::CameraMode::Video:
-                return rpc::camera_server::CAMERA_MODE_VIDEO;
+            case mavsdk::CameraServer::Mode::Unknown:
+                return rpc::camera_server::MODE_UNKNOWN;
+            case mavsdk::CameraServer::Mode::Photo:
+                return rpc::camera_server::MODE_PHOTO;
+            case mavsdk::CameraServer::Mode::Video:
+                return rpc::camera_server::MODE_VIDEO;
         }
     }
 
-    static mavsdk::CameraServer::CameraMode
-    translateFromRpcCameraMode(const rpc::camera_server::CameraMode camera_mode)
+    static mavsdk::CameraServer::Mode translateFromRpcMode(const rpc::camera_server::Mode mode)
     {
-        switch (camera_mode) {
+        switch (mode) {
             default:
-                LogErr() << "Unknown camera_mode enum value: " << static_cast<int>(camera_mode);
+                LogErr() << "Unknown mode enum value: " << static_cast<int>(mode);
             // FALLTHROUGH
-            case rpc::camera_server::CAMERA_MODE_UNKNOWN:
-                return mavsdk::CameraServer::CameraMode::Unknown;
-            case rpc::camera_server::CAMERA_MODE_PHOTO:
-                return mavsdk::CameraServer::CameraMode::Photo;
-            case rpc::camera_server::CAMERA_MODE_VIDEO:
-                return mavsdk::CameraServer::CameraMode::Video;
+            case rpc::camera_server::MODE_UNKNOWN:
+                return mavsdk::CameraServer::Mode::Unknown;
+            case rpc::camera_server::MODE_PHOTO:
+                return mavsdk::CameraServer::Mode::Photo;
+            case rpc::camera_server::MODE_VIDEO:
+                return mavsdk::CameraServer::Mode::Video;
         }
     }
 
@@ -845,10 +843,10 @@ public:
         return grpc::Status::OK;
     }
 
-    grpc::Status SubscribeSetCameraMode(
+    grpc::Status SubscribeSetMode(
         grpc::ServerContext* /* context */,
-        const mavsdk::rpc::camera_server::SubscribeSetCameraModeRequest* /* request */,
-        grpc::ServerWriter<rpc::camera_server::SetCameraModeResponse>* writer) override
+        const mavsdk::rpc::camera_server::SubscribeSetModeRequest* /* request */,
+        grpc::ServerWriter<rpc::camera_server::SetModeResponse>* writer) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
             return grpc::Status::OK;
@@ -861,17 +859,17 @@ public:
         auto is_finished = std::make_shared<bool>(false);
         auto subscribe_mutex = std::make_shared<std::mutex>();
 
-        const mavsdk::CameraServer::SetCameraModeHandle handle =
-            _lazy_plugin.maybe_plugin()->subscribe_set_camera_mode(
+        const mavsdk::CameraServer::SetModeHandle handle =
+            _lazy_plugin.maybe_plugin()->subscribe_set_mode(
                 [this, &writer, &stream_closed_promise, is_finished, subscribe_mutex, &handle](
-                    const mavsdk::CameraServer::CameraMode set_camera_mode) {
-                    rpc::camera_server::SetCameraModeResponse rpc_response;
+                    const mavsdk::CameraServer::Mode set_mode) {
+                    rpc::camera_server::SetModeResponse rpc_response;
 
-                    rpc_response.set_camera_mode(translateToRpcCameraMode(set_camera_mode));
+                    rpc_response.set_mode(translateToRpcMode(set_mode));
 
                     std::unique_lock<std::mutex> lock(*subscribe_mutex);
                     if (!*is_finished && !writer->Write(rpc_response)) {
-                        _lazy_plugin.maybe_plugin()->unsubscribe_set_camera_mode(handle);
+                        _lazy_plugin.maybe_plugin()->unsubscribe_set_mode(handle);
 
                         *is_finished = true;
                         unregister_stream_stop_promise(stream_closed_promise);

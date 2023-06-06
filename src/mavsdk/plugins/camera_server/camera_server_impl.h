@@ -40,9 +40,8 @@ public:
     subscribe_stop_video_streaming(const CameraServer::StopVideoStreamingCallback& callback);
     void unsubscribe_stop_video_streaming(CameraServer::StopVideoStreamingHandle handle);
 
-    CameraServer::SetCameraModeHandle
-    subscribe_set_camera_mode(const CameraServer::SetCameraModeCallback& callback);
-    void unsubscribe_set_camera_mode(CameraServer::SetCameraModeHandle handle);
+    CameraServer::SetModeHandle subscribe_set_mode(const CameraServer::SetModeCallback& callback);
+    void unsubscribe_set_mode(CameraServer::SetModeHandle handle);
 
     CameraServer::StorageInformationHandle
     subscribe_storage_information(const CameraServer::StorageInformationCallback& callback);
@@ -89,7 +88,7 @@ private:
     CallbackList<int32_t> _stop_video_callbacks{};
     CallbackList<int32_t> _start_video_streaming_callbacks{};
     CallbackList<int32_t> _stop_video_streaming_callbacks{};
-    CallbackList<CameraServer::CameraMode> _set_camera_mode_callbacks{};
+    CallbackList<CameraServer::Mode> _set_mode_callbacks{};
     CallbackList<int32_t> _storage_information_callbacks{};
     CallbackList<int32_t> _capture_status_callbacks{};
     CallbackList<int32_t> _format_storage_callbacks{};

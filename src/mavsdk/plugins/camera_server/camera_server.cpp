@@ -89,15 +89,14 @@ void CameraServer::unsubscribe_stop_video_streaming(StopVideoStreamingHandle han
     _impl->unsubscribe_stop_video_streaming(handle);
 }
 
-CameraServer::SetCameraModeHandle
-CameraServer::subscribe_set_camera_mode(const SetCameraModeCallback& callback)
+CameraServer::SetModeHandle CameraServer::subscribe_set_mode(const SetModeCallback& callback)
 {
-    return _impl->subscribe_set_camera_mode(callback);
+    return _impl->subscribe_set_mode(callback);
 }
 
-void CameraServer::unsubscribe_set_camera_mode(SetCameraModeHandle handle)
+void CameraServer::unsubscribe_set_mode(SetModeHandle handle)
 {
-    _impl->unsubscribe_set_camera_mode(handle);
+    _impl->unsubscribe_set_mode(handle);
 }
 
 CameraServer::StorageInformationHandle
@@ -426,14 +425,14 @@ operator<<(std::ostream& str, CameraServer::TakePhotoFeedback const& take_photo_
     }
 }
 
-std::ostream& operator<<(std::ostream& str, CameraServer::CameraMode const& camera_mode)
+std::ostream& operator<<(std::ostream& str, CameraServer::Mode const& mode)
 {
-    switch (camera_mode) {
-        case CameraServer::CameraMode::Unknown:
+    switch (mode) {
+        case CameraServer::Mode::Unknown:
             return str << "Unknown";
-        case CameraServer::CameraMode::Photo:
+        case CameraServer::Mode::Photo:
             return str << "Photo";
-        case CameraServer::CameraMode::Video:
+        case CameraServer::Mode::Video:
             return str << "Video";
         default:
             return str << "Unknown";
