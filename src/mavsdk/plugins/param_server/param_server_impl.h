@@ -26,21 +26,20 @@ public:
 
     std::pair<ParamServer::Result, std::string> retrieve_param_custom(std::string name) const;
 
-    ParamServer::Result
-    provide_param_custom(std::string name, std::string value, ParamServer::Type value_type) const;
+    ParamServer::Result provide_param_custom(std::string name, std::string value) const;
 
     ParamServer::AllParams retrieve_all_params() const;
 
-    ParamServer::ParamChangedHandle subscribe_param_changed(
-        std::string name, ParamServer::Type type, const ParamServer::ParamChangedCallback callback);
-    void unsubscribe_param_changed(ParamServer::ParamChangedHandle handle);
+    ParamServer::CustomParamChangedHandle
+    subscribe_custom_param_changed(const ParamServer::CustomParamChangedCallback callback);
+    void unsubscribe_custom_param_changed(ParamServer::CustomParamChangedHandle handle);
 
     static ParamServer::Result
     result_from_mavlink_parameter_server_result(MavlinkParameterServer::Result result);
 
 private:
-    CallbackList<std::string> _param_changed_callback{};
-    std::unordered_map<std::string, ParamServer::ParamChangedCallback> _param_changed_callback_map;
+    mutable CallbackList<std::string> _custom_param_changed_callbacks{};
+    mutable ParamServer::CustomParamChangedCallback _custom_param_changed_callback;
 };
 
 } // namespace mavsdk

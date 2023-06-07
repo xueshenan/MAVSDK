@@ -857,7 +857,7 @@ public:
 
     grpc::Status StartVideoStreaming(
         grpc::ServerContext* /* context */,
-        const rpc::camera::StartVideoStreamingRequest* /* request */,
+        const rpc::camera::StartVideoStreamingRequest* request,
         rpc::camera::StartVideoStreamingResponse* response) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
@@ -869,7 +869,12 @@ public:
             return grpc::Status::OK;
         }
 
-        auto result = _lazy_plugin.maybe_plugin()->start_video_streaming();
+        if (request == nullptr) {
+            LogWarn() << "StartVideoStreaming sent with a null request! Ignoring...";
+            return grpc::Status::OK;
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->start_video_streaming(request->stream_id());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);
@@ -880,7 +885,7 @@ public:
 
     grpc::Status StopVideoStreaming(
         grpc::ServerContext* /* context */,
-        const rpc::camera::StopVideoStreamingRequest* /* request */,
+        const rpc::camera::StopVideoStreamingRequest* request,
         rpc::camera::StopVideoStreamingResponse* response) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
@@ -892,7 +897,12 @@ public:
             return grpc::Status::OK;
         }
 
-        auto result = _lazy_plugin.maybe_plugin()->stop_video_streaming();
+        if (request == nullptr) {
+            LogWarn() << "StopVideoStreaming sent with a null request! Ignoring...";
+            return grpc::Status::OK;
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->stop_video_streaming(request->stream_id());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);
@@ -1396,10 +1406,10 @@ public:
         return grpc::Status::OK;
     }
 
-    grpc::Status SetDefinitionFileData(
+    grpc::Status SetDefinitionData(
         grpc::ServerContext* /* context */,
-        const rpc::camera::SetDefinitionFileDataRequest* request,
-        rpc::camera::SetDefinitionFileDataResponse* response) override
+        const rpc::camera::SetDefinitionDataRequest* request,
+        rpc::camera::SetDefinitionDataResponse* response) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
             if (response != nullptr) {
@@ -1411,12 +1421,11 @@ public:
         }
 
         if (request == nullptr) {
-            LogWarn() << "SetDefinitionFileData sent with a null request! Ignoring...";
+            LogWarn() << "SetDefinitionData sent with a null request! Ignoring...";
             return grpc::Status::OK;
         }
 
-        auto result =
-            _lazy_plugin.maybe_plugin()->set_definition_file_data(request->definition_file_data());
+        auto result = _lazy_plugin.maybe_plugin()->set_definition_data(request->definition_data());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);

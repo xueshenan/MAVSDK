@@ -402,6 +402,27 @@ public:
     respond_take_photo(TakePhotoFeedback take_photo_feedback, CaptureInfo capture_info) const;
 
     /**
+     * @brief Callback type for subscribe_start_photo_interval_async.
+     */
+    using SubscribeStartPhotoIntervalCallback = std::function<void(float)>;
+
+    /**
+     * @brief Subscribe to start photo interval requests. Each request received should response to
+     * using StartPhotoIntervalResponse
+     *
+     * This function is non-blocking.
+     */
+    void subscribe_start_photo_interval_async(const SubscribeStartPhotoIntervalCallback callback);
+
+    /**
+     * @brief Subscribe to stop photo interval requests. Each request received should response to
+     * using StopPhotoIntervalResponse
+     *
+     * This function is non-blocking.
+     */
+    void subscribe_stop_photo_interval_async(const ResultCallback callback);
+
+    /**
      * @brief Callback type for subscribe_start_video.
      */
     using StartVideoCallback = std::function<void(int32_t)>;

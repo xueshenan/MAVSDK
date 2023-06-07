@@ -43,72 +43,6 @@ public:
         response->set_allocated_param_server_result(rpc_param_server_result);
     }
 
-    static rpc::param_server::Type translateToRpcType(const mavsdk::ParamServer::Type& type)
-    {
-        switch (type) {
-            default:
-                LogErr() << "Unknown type enum value: " << static_cast<int>(type);
-            // FALLTHROUGH
-            case mavsdk::ParamServer::Type::String:
-                return rpc::param_server::TYPE_STRING;
-            case mavsdk::ParamServer::Type::Int8:
-                return rpc::param_server::TYPE_INT8;
-            case mavsdk::ParamServer::Type::Uint8:
-                return rpc::param_server::TYPE_UINT8;
-            case mavsdk::ParamServer::Type::Int16:
-                return rpc::param_server::TYPE_INT16;
-            case mavsdk::ParamServer::Type::Uint16:
-                return rpc::param_server::TYPE_UINT16;
-            case mavsdk::ParamServer::Type::Int32:
-                return rpc::param_server::TYPE_INT32;
-            case mavsdk::ParamServer::Type::Uint32:
-                return rpc::param_server::TYPE_UINT32;
-            case mavsdk::ParamServer::Type::Int64:
-                return rpc::param_server::TYPE_INT64;
-            case mavsdk::ParamServer::Type::Uint64:
-                return rpc::param_server::TYPE_UINT64;
-            case mavsdk::ParamServer::Type::Float:
-                return rpc::param_server::TYPE_FLOAT;
-            case mavsdk::ParamServer::Type::Double:
-                return rpc::param_server::TYPE_DOUBLE;
-            case mavsdk::ParamServer::Type::Custom:
-                return rpc::param_server::TYPE_CUSTOM;
-        }
-    }
-
-    static mavsdk::ParamServer::Type translateFromRpcType(const rpc::param_server::Type type)
-    {
-        switch (type) {
-            default:
-                LogErr() << "Unknown type enum value: " << static_cast<int>(type);
-            // FALLTHROUGH
-            case rpc::param_server::TYPE_STRING:
-                return mavsdk::ParamServer::Type::String;
-            case rpc::param_server::TYPE_INT8:
-                return mavsdk::ParamServer::Type::Int8;
-            case rpc::param_server::TYPE_UINT8:
-                return mavsdk::ParamServer::Type::Uint8;
-            case rpc::param_server::TYPE_INT16:
-                return mavsdk::ParamServer::Type::Int16;
-            case rpc::param_server::TYPE_UINT16:
-                return mavsdk::ParamServer::Type::Uint16;
-            case rpc::param_server::TYPE_INT32:
-                return mavsdk::ParamServer::Type::Int32;
-            case rpc::param_server::TYPE_UINT32:
-                return mavsdk::ParamServer::Type::Uint32;
-            case rpc::param_server::TYPE_INT64:
-                return mavsdk::ParamServer::Type::Int64;
-            case rpc::param_server::TYPE_UINT64:
-                return mavsdk::ParamServer::Type::Uint64;
-            case rpc::param_server::TYPE_FLOAT:
-                return mavsdk::ParamServer::Type::Float;
-            case rpc::param_server::TYPE_DOUBLE:
-                return mavsdk::ParamServer::Type::Double;
-            case rpc::param_server::TYPE_CUSTOM:
-                return mavsdk::ParamServer::Type::Custom;
-        }
-    }
-
     static std::unique_ptr<rpc::param_server::IntParam>
     translateToRpcIntParam(const mavsdk::ParamServer::IntParam& int_param)
     {
@@ -454,8 +388,8 @@ public:
             return grpc::Status::OK;
         }
 
-        auto result = _lazy_plugin.maybe_plugin()->provide_param_custom(
-            request->name(), request->value(), translateFromRpcType(request->value_type()));
+        auto result =
+            _lazy_plugin.maybe_plugin()->provide_param_custom(request->name(), request->value());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);
@@ -482,10 +416,10 @@ public:
         return grpc::Status::OK;
     }
 
-    grpc::Status SubscribeParamChanged(
+    grpc::Status SubscribeCustomParamChanged(
         grpc::ServerContext* /* context */,
-        const mavsdk::rpc::param_server::SubscribeParamChangedRequest* request,
-        grpc::ServerWriter<rpc::param_server::ParamChangedResponse>* writer) override
+        const mavsdk::rpc::param_server::SubscribeCustomParamChangedRequest* /* request */,
+        grpc::ServerWriter<rpc::param_server::CustomParamChangedResponse>* writer) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
             return grpc::Status::OK;
@@ -498,19 +432,18 @@ public:
         auto is_finished = std::make_shared<bool>(false);
         auto subscribe_mutex = std::make_shared<std::mutex>();
 
-        const mavsdk::ParamServer::ParamChangedHandle handle =
-            _lazy_plugin.maybe_plugin()->subscribe_param_changed(
-                request->name(),
-                translateFromRpcType(request->type()),
+        const mavsdk::ParamServer::CustomParamChangedHandle handle =
+            _lazy_plugin.maybe_plugin()->subscribe_custom_param_changed(
                 [this, &writer, &stream_closed_promise, is_finished, subscribe_mutex, &handle](
-                    const std::string param_changed) {
-                    rpc::param_server::ParamChangedResponse rpc_response;
+                    const mavsdk::ParamServer::CustomParam custom_param_changed) {
+                    rpc::param_server::CustomParamChangedResponse rpc_response;
 
-                    rpc_response.set_value(param_changed);
+                    rpc_response.set_allocated_param(
+                        translateToRpcCustomParam(custom_param_changed).release());
 
                     std::unique_lock<std::mutex> lock(*subscribe_mutex);
                     if (!*is_finished && !writer->Write(rpc_response)) {
-                        _lazy_plugin.maybe_plugin()->unsubscribe_param_changed(handle);
+                        _lazy_plugin.maybe_plugin()->unsubscribe_custom_param_changed(handle);
 
                         *is_finished = true;
                         unregister_stream_stop_promise(stream_closed_promise);

@@ -283,6 +283,14 @@ CameraServer::Result CameraServerImpl::respond_take_photo(
     return CameraServer::Result::Success;
 }
 
+void CameraServerImpl::subscribe_start_photo_interval_async(
+    const CameraServer::SubscribeStartPhotoIntervalCallback callback)
+{}
+
+void CameraServerImpl::subscribe_stop_photo_interval_async(
+    const CameraServer::ResultCallback callback)
+{}
+
 CameraServer::StartVideoHandle
 CameraServerImpl::subscribe_start_video(const CameraServer::StartVideoCallback& callback)
 {

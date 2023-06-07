@@ -24,6 +24,10 @@ public:
         CameraServer::TakePhotoFeedback take_photo_feedback,
         CameraServer::CaptureInfo capture_info);
 
+    void subscribe_start_photo_interval_async(
+        const CameraServer::SubscribeStartPhotoIntervalCallback callback);
+    void subscribe_stop_photo_interval_async(const CameraServer::ResultCallback callback);
+
     CameraServer::StartVideoHandle
     subscribe_start_video(const CameraServer::StartVideoCallback& callback);
     void unsubscribe_start_video(CameraServer::StartVideoHandle handle);

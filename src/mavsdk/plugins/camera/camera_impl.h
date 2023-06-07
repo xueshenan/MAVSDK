@@ -52,8 +52,8 @@ public:
     subscribe_video_stream_info(const Camera::VideoStreamInfoCallback& callback);
     void unsubscribe_video_stream_info(Camera::VideoStreamInfoHandle handle);
 
-    Camera::Result start_video_streaming();
-    Camera::Result stop_video_streaming();
+    Camera::Result start_video_streaming(int32_t stream_id);
+    Camera::Result stop_video_streaming(int32_t stream_id);
 
     Camera::Result set_mode(const Camera::Mode mode);
     void set_mode_async(const Camera::Mode mode, const Camera::ResultCallback& callback);
@@ -92,7 +92,7 @@ public:
     Camera::Result reset_settings();
     void reset_settings_async(const Camera::ResultCallback callback);
 
-    Camera::Result set_definition_file_data(std::string definition_file_data);
+    Camera::Result set_definition_data(std::string definition_data);
 
     std::pair<Camera::Result, std::vector<Camera::CaptureInfo>>
     list_photos(Camera::PhotosRange photos_range);
@@ -199,8 +199,8 @@ private:
     MavlinkCommandSender::CommandLong make_command_start_video(float capture_status_rate_hz);
     MavlinkCommandSender::CommandLong make_command_stop_video();
 
-    MavlinkCommandSender::CommandLong make_command_start_video_streaming();
-    MavlinkCommandSender::CommandLong make_command_stop_video_streaming();
+    MavlinkCommandSender::CommandLong make_command_start_video_streaming(int32_t stream_id);
+    MavlinkCommandSender::CommandLong make_command_stop_video_streaming(int32_t stream_id);
 
     MavlinkCommandSender::CommandLong make_command_request_video_stream_info();
     MavlinkCommandSender::CommandLong make_command_request_video_stream_status();

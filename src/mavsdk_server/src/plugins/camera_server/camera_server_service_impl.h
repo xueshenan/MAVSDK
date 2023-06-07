@@ -679,6 +679,54 @@ public:
         return grpc::Status::OK;
     }
 
+    grpc::Status SubscribeStartPhotoInterval(
+        grpc::ServerContext* /* context */,
+        const rpc::camera_server::SubscribeStartPhotoIntervalRequest* /* request */,
+        rpc::camera_server::SubscribeStartPhotoIntervalResponse* response) override
+    {
+        if (_lazy_plugin.maybe_plugin() == nullptr) {
+            return grpc::Status::OK;
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->subscribe_start_photo_interval();
+
+        if (response != nullptr) {
+            response->set_interval_s(result);
+        }
+
+        return grpc::Status::OK;
+    }
+
+    grpc::Status SubscribeStopPhotoInterval(
+        grpc::ServerContext* /* context */,
+        const rpc::camera_server::SubscribeStopPhotoIntervalRequest* /* request */,
+        rpc::camera_server::SubscribeStopPhotoIntervalResponse* response) override
+    {
+        if (_lazy_plugin.maybe_plugin() == nullptr) {
+            if (response != nullptr) {
+                // For server plugins, this should never happen, they should always be
+                // constructible.
+                auto result = mavsdk::CameraServer::Result::Unknown;
+                fillResponseWithResult(response, result);
+            }
+
+            return grpc::Status::OK;
+        }
+
+        std::promise<mavsdk::CameraServer::Result> prom;
+        std::future<mavsdk::CameraServer::Result> fut = prom.get_future();
+
+        _lazy_plugin.maybe_plugin()->subscribe_stop_photo_interval_async(
+            [&prom](const mavsdk::CameraServer::Result result) { prom.set_value(result); });
+        auto result = fut.get();
+
+        if (response != nullptr) {
+            fillResponseWithResult(response, result);
+        }
+
+        return grpc::Status::OK;
+    }
+
     grpc::Status SubscribeStartVideo(
         grpc::ServerContext* /* context */,
         const mavsdk::rpc::camera_server::SubscribeStartVideoRequest* /* request */,

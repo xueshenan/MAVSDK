@@ -95,9 +95,7 @@ TEST(SystemTest, ParamGetAll)
     }
 
     for (auto const& [key, val] : test_string_params) {
-        EXPECT_EQ(
-            param_server.provide_param_custom(key, val, ParamServer::Type::String),
-            ParamServer::Result::Success);
+        EXPECT_EQ(param_server.provide_param_custom(key, val), ParamServer::Result::Success);
     }
 
     {
@@ -164,9 +162,7 @@ TEST(SystemTest, ParamGetAllLossy)
     }
 
     for (auto const& [key, val] : test_string_params) {
-        EXPECT_EQ(
-            param_server.provide_param_custom(key, val, ParamServer::Type::String),
-            ParamServer::Result::Success);
+        EXPECT_EQ(param_server.provide_param_custom(key, val), ParamServer::Result::Success);
     }
 
     {
