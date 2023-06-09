@@ -1026,7 +1026,7 @@ public:
                     const int32_t capture_status) {
                     rpc::camera_server::CaptureStatusResponse rpc_response;
 
-                    rpc_response.set_storage_id(capture_status);
+                    rpc_response.set_reserved(capture_status);
 
                     std::unique_lock<std::mutex> lock(*subscribe_mutex);
                     if (!*is_finished && !writer->Write(rpc_response)) {
@@ -1139,7 +1139,7 @@ public:
                     const int32_t reset_settings) {
                     rpc::camera_server::ResetSettingsResponse rpc_response;
 
-                    rpc_response.set_camera_id(reset_settings);
+                    rpc_response.set_reserved(reset_settings);
 
                     std::unique_lock<std::mutex> lock(*subscribe_mutex);
                     if (!*is_finished && !writer->Write(rpc_response)) {

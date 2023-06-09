@@ -470,11 +470,18 @@ public:
     struct Information {
         std::string vendor_name{}; /**< @brief Name of the camera vendor */
         std::string model_name{}; /**< @brief Name of the camera model */
+        std::string firmware_version{}; /**< @brief Camera firmware version in
+                                           major[.minor[.patch[.dev]]] format */
         float focal_length_mm{}; /**< @brief Focal length */
         float horizontal_sensor_size_mm{}; /**< @brief Horizontal sensor size */
         float vertical_sensor_size_mm{}; /**< @brief Vertical sensor size */
         uint32_t horizontal_resolution_px{}; /**< @brief Horizontal image resolution in pixels */
         uint32_t vertical_resolution_px{}; /**< @brief Vertical image resolution in pixels */
+        uint32_t lens_id{}; /**< @brief Lens ID */
+        uint32_t
+            definition_file_version{}; /**< @brief Camera definition file version (iteration) */
+        std::string
+            definition_file_uri{}; /**< @brief Camera definition URI (http or mavlink ftp) */
     };
 
     /**

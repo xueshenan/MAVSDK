@@ -383,6 +383,7 @@ CameraServer::Result CameraServerImpl::respond_storage_information(
             status = STORAGE_STATUS::STORAGE_STATUS_READY;
             break;
         case CameraServer::StorageInformation::StorageStatus::NotSupported:
+            status = STORAGE_STATUS::STORAGE_STATUS_NOT_SUPPORTED;
             break;
     }
 
@@ -683,7 +684,7 @@ std::optional<mavlink_message_t> CameraServerImpl::process_storage_information_r
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
 
-    // ack needs to be sent before stroage information message
+    // ack needs to be sent before storage information message
     auto ack_msg =
         _server_component_impl->make_command_ack_message(command, MAV_RESULT::MAV_RESULT_ACCEPTED);
     _server_component_impl->send_message(ack_msg);
@@ -926,10 +927,6 @@ CameraServerImpl::process_video_start_capture(const MavlinkCommandReceiver::Comm
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
 
-    auto ack_msg = _server_component_impl->make_command_ack_message(
-        command, MAV_RESULT::MAV_RESULT_IN_PROGRESS);
-    _server_component_impl->send_message(ack_msg);
-
     _start_video_callbacks(stream_id);
 
     return _server_component_impl->make_command_ack_message(
@@ -946,10 +943,6 @@ CameraServerImpl::process_video_stop_capture(const MavlinkCommandReceiver::Comma
         return _server_component_impl->make_command_ack_message(
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
-
-    auto ack_msg = _server_component_impl->make_command_ack_message(
-        command, MAV_RESULT::MAV_RESULT_IN_PROGRESS);
-    _server_component_impl->send_message(ack_msg);
 
     _stop_video_callbacks(stream_id);
 
