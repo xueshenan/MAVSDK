@@ -283,13 +283,28 @@ CameraServer::Result CameraServerImpl::respond_take_photo(
     return CameraServer::Result::Success;
 }
 
-void CameraServerImpl::subscribe_start_photo_interval_async(
-    const CameraServer::SubscribeStartPhotoIntervalCallback callback)
-{}
+CameraServer::StartPhotoIntervalHandle CameraServerImpl::subscribe_start_photo_interval(
+    const CameraServer::StartPhotoIntervalCallback& callback)
+{
+    return _start_photo_interval_callbacks.subscribe(callback);
+}
 
-void CameraServerImpl::subscribe_stop_photo_interval_async(
-    const CameraServer::ResultCallback callback)
-{}
+void CameraServerImpl::unsubscribe_start_photo_interval(
+    CameraServer::StartPhotoIntervalHandle handle)
+{
+    _start_photo_interval_callbacks.unsubscribe(handle);
+}
+
+CameraServer::StopPhotoIntervalHandle CameraServerImpl::subscribe_stop_photo_interval(
+    const CameraServer::StopPhotoIntervalCallback& callback)
+{
+    return _stop_photo_interval_callbacks.subscribe(callback);
+}
+
+void CameraServerImpl::unsubscribe_stop_photo_interval(CameraServer::StopPhotoIntervalHandle handle)
+{
+    _stop_photo_interval_callbacks.unsubscribe(handle);
+}
 
 CameraServer::StartVideoHandle
 CameraServerImpl::subscribe_start_video(const CameraServer::StartVideoCallback& callback)

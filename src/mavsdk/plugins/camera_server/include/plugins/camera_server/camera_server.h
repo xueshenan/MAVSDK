@@ -402,25 +402,48 @@ public:
     respond_take_photo(TakePhotoFeedback take_photo_feedback, CaptureInfo capture_info) const;
 
     /**
-     * @brief Callback type for subscribe_start_photo_interval_async.
+     * @brief Callback type for subscribe_start_photo_interval.
      */
-    using SubscribeStartPhotoIntervalCallback = std::function<void(float)>;
+    using StartPhotoIntervalCallback = std::function<void(float)>;
+
+    /**
+     * @brief Handle type for subscribe_start_photo_interval.
+     */
+    using StartPhotoIntervalHandle = Handle<float>;
 
     /**
      * @brief Subscribe to start photo interval requests. Each request received should response to
      * using StartPhotoIntervalResponse
-     *
-     * This function is non-blocking.
      */
-    void subscribe_start_photo_interval_async(const SubscribeStartPhotoIntervalCallback callback);
+    StartPhotoIntervalHandle
+    subscribe_start_photo_interval(const StartPhotoIntervalCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_start_photo_interval
+     */
+    void unsubscribe_start_photo_interval(StartPhotoIntervalHandle handle);
+
+    /**
+     * @brief Callback type for subscribe_stop_photo_interval.
+     */
+    using StopPhotoIntervalCallback = std::function<void(int32_t)>;
+
+    /**
+     * @brief Handle type for subscribe_stop_photo_interval.
+     */
+    using StopPhotoIntervalHandle = Handle<int32_t>;
 
     /**
      * @brief Subscribe to stop photo interval requests. Each request received should response to
      * using StopPhotoIntervalResponse
-     *
-     * This function is non-blocking.
      */
-    void subscribe_stop_photo_interval_async(const ResultCallback callback);
+    StopPhotoIntervalHandle
+    subscribe_stop_photo_interval(const StopPhotoIntervalCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_stop_photo_interval
+     */
+    void unsubscribe_stop_photo_interval(StopPhotoIntervalHandle handle);
 
     /**
      * @brief Callback type for subscribe_start_video.

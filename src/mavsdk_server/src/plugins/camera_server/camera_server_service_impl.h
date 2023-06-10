@@ -681,48 +681,82 @@ public:
 
     grpc::Status SubscribeStartPhotoInterval(
         grpc::ServerContext* /* context */,
-        const rpc::camera_server::SubscribeStartPhotoIntervalRequest* /* request */,
-        rpc::camera_server::SubscribeStartPhotoIntervalResponse* response) override
+        const mavsdk::rpc::camera_server::SubscribeStartPhotoIntervalRequest* /* request */,
+        grpc::ServerWriter<rpc::camera_server::StartPhotoIntervalResponse>* writer) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
             return grpc::Status::OK;
         }
 
-        auto result = _lazy_plugin.maybe_plugin()->subscribe_start_photo_interval();
+        auto stream_closed_promise = std::make_shared<std::promise<void>>();
+        auto stream_closed_future = stream_closed_promise->get_future();
+        register_stream_stop_promise(stream_closed_promise);
 
-        if (response != nullptr) {
-            response->set_interval_s(result);
-        }
+        auto is_finished = std::make_shared<bool>(false);
+        auto subscribe_mutex = std::make_shared<std::mutex>();
+
+        const mavsdk::CameraServer::StartPhotoIntervalHandle handle =
+            _lazy_plugin.maybe_plugin()->subscribe_start_photo_interval(
+                [this, &writer, &stream_closed_promise, is_finished, subscribe_mutex, &handle](
+                    const float start_photo_interval) {
+                    rpc::camera_server::StartPhotoIntervalResponse rpc_response;
+
+                    rpc_response.set_interval_s(start_photo_interval);
+
+                    std::unique_lock<std::mutex> lock(*subscribe_mutex);
+                    if (!*is_finished && !writer->Write(rpc_response)) {
+                        _lazy_plugin.maybe_plugin()->unsubscribe_start_photo_interval(handle);
+
+                        *is_finished = true;
+                        unregister_stream_stop_promise(stream_closed_promise);
+                        stream_closed_promise->set_value();
+                    }
+                });
+
+        stream_closed_future.wait();
+        std::unique_lock<std::mutex> lock(*subscribe_mutex);
+        *is_finished = true;
 
         return grpc::Status::OK;
     }
 
     grpc::Status SubscribeStopPhotoInterval(
         grpc::ServerContext* /* context */,
-        const rpc::camera_server::SubscribeStopPhotoIntervalRequest* /* request */,
-        rpc::camera_server::SubscribeStopPhotoIntervalResponse* response) override
+        const mavsdk::rpc::camera_server::SubscribeStopPhotoIntervalRequest* /* request */,
+        grpc::ServerWriter<rpc::camera_server::StopPhotoIntervalResponse>* writer) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
-            if (response != nullptr) {
-                // For server plugins, this should never happen, they should always be
-                // constructible.
-                auto result = mavsdk::CameraServer::Result::Unknown;
-                fillResponseWithResult(response, result);
-            }
-
             return grpc::Status::OK;
         }
 
-        std::promise<mavsdk::CameraServer::Result> prom;
-        std::future<mavsdk::CameraServer::Result> fut = prom.get_future();
+        auto stream_closed_promise = std::make_shared<std::promise<void>>();
+        auto stream_closed_future = stream_closed_promise->get_future();
+        register_stream_stop_promise(stream_closed_promise);
 
-        _lazy_plugin.maybe_plugin()->subscribe_stop_photo_interval_async(
-            [&prom](const mavsdk::CameraServer::Result result) { prom.set_value(result); });
-        auto result = fut.get();
+        auto is_finished = std::make_shared<bool>(false);
+        auto subscribe_mutex = std::make_shared<std::mutex>();
 
-        if (response != nullptr) {
-            fillResponseWithResult(response, result);
-        }
+        const mavsdk::CameraServer::StopPhotoIntervalHandle handle =
+            _lazy_plugin.maybe_plugin()->subscribe_stop_photo_interval(
+                [this, &writer, &stream_closed_promise, is_finished, subscribe_mutex, &handle](
+                    const int32_t stop_photo_interval) {
+                    rpc::camera_server::StopPhotoIntervalResponse rpc_response;
+
+                    rpc_response.set_reserved(stop_photo_interval);
+
+                    std::unique_lock<std::mutex> lock(*subscribe_mutex);
+                    if (!*is_finished && !writer->Write(rpc_response)) {
+                        _lazy_plugin.maybe_plugin()->unsubscribe_stop_photo_interval(handle);
+
+                        *is_finished = true;
+                        unregister_stream_stop_promise(stream_closed_promise);
+                        stream_closed_promise->set_value();
+                    }
+                });
+
+        stream_closed_future.wait();
+        std::unique_lock<std::mutex> lock(*subscribe_mutex);
+        *is_finished = true;
 
         return grpc::Status::OK;
     }
