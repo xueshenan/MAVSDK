@@ -86,6 +86,7 @@ static void SubscribeCameraOperation(mavsdk::CameraServer& camera_server)
                              std::chrono::system_clock::now().time_since_epoch())
                              .count();
         auto success = true;
+        image_count++;
         camera_server.respond_take_photo(
             mavsdk::CameraServer::TakePhotoFeedback::Ok,
             mavsdk::CameraServer::CaptureInfo{
@@ -97,7 +98,6 @@ static void SubscribeCameraOperation(mavsdk::CameraServer& camera_server)
                 .file_url = {},
             });
         is_capture_in_progress = false;
-        image_count++;
     });
     camera_server.subscribe_start_video([](int32_t stream_id) {
         std::cout << "Start video record" << std::endl;

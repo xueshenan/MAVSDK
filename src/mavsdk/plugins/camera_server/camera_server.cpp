@@ -46,28 +46,6 @@ CameraServer::Result CameraServer::respond_take_photo(
     return _impl->respond_take_photo(take_photo_feedback, capture_info);
 }
 
-CameraServer::StartPhotoIntervalHandle
-CameraServer::subscribe_start_photo_interval(const StartPhotoIntervalCallback& callback)
-{
-    return _impl->subscribe_start_photo_interval(callback);
-}
-
-void CameraServer::unsubscribe_start_photo_interval(StartPhotoIntervalHandle handle)
-{
-    _impl->unsubscribe_start_photo_interval(handle);
-}
-
-CameraServer::StopPhotoIntervalHandle
-CameraServer::subscribe_stop_photo_interval(const StopPhotoIntervalCallback& callback)
-{
-    return _impl->subscribe_stop_photo_interval(callback);
-}
-
-void CameraServer::unsubscribe_stop_photo_interval(StopPhotoIntervalHandle handle)
-{
-    _impl->unsubscribe_stop_photo_interval(handle);
-}
-
 CameraServer::StartVideoHandle
 CameraServer::subscribe_start_video(const StartVideoCallback& callback)
 {
