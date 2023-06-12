@@ -677,6 +677,8 @@ public:
 
         rpc_obj->set_model_name(information.model_name);
 
+        rpc_obj->set_firmware_version(information.firmware_version);
+
         rpc_obj->set_focal_length_mm(information.focal_length_mm);
 
         rpc_obj->set_horizontal_sensor_size_mm(information.horizontal_sensor_size_mm);
@@ -686,6 +688,12 @@ public:
         rpc_obj->set_horizontal_resolution_px(information.horizontal_resolution_px);
 
         rpc_obj->set_vertical_resolution_px(information.vertical_resolution_px);
+
+        rpc_obj->set_lens_id(information.lens_id);
+
+        rpc_obj->set_definition_file_version(information.definition_file_version);
+
+        rpc_obj->set_definition_file_uri(information.definition_file_uri);
 
         return rpc_obj;
     }
@@ -699,6 +707,8 @@ public:
 
         obj.model_name = information.model_name();
 
+        obj.firmware_version = information.firmware_version();
+
         obj.focal_length_mm = information.focal_length_mm();
 
         obj.horizontal_sensor_size_mm = information.horizontal_sensor_size_mm();
@@ -708,6 +718,12 @@ public:
         obj.horizontal_resolution_px = information.horizontal_resolution_px();
 
         obj.vertical_resolution_px = information.vertical_resolution_px();
+
+        obj.lens_id = information.lens_id();
+
+        obj.definition_file_version = information.definition_file_version();
+
+        obj.definition_file_uri = information.definition_file_uri();
 
         return obj;
     }
@@ -857,7 +873,7 @@ public:
 
     grpc::Status StartVideoStreaming(
         grpc::ServerContext* /* context */,
-        const rpc::camera::StartVideoStreamingRequest* /* request */,
+        const rpc::camera::StartVideoStreamingRequest* request,
         rpc::camera::StartVideoStreamingResponse* response) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
@@ -869,7 +885,12 @@ public:
             return grpc::Status::OK;
         }
 
-        auto result = _lazy_plugin.maybe_plugin()->start_video_streaming();
+        if (request == nullptr) {
+            LogWarn() << "StartVideoStreaming sent with a null request! Ignoring...";
+            return grpc::Status::OK;
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->start_video_streaming(request->stream_id());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);
@@ -880,7 +901,7 @@ public:
 
     grpc::Status StopVideoStreaming(
         grpc::ServerContext* /* context */,
-        const rpc::camera::StopVideoStreamingRequest* /* request */,
+        const rpc::camera::StopVideoStreamingRequest* request,
         rpc::camera::StopVideoStreamingResponse* response) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
@@ -892,7 +913,12 @@ public:
             return grpc::Status::OK;
         }
 
-        auto result = _lazy_plugin.maybe_plugin()->stop_video_streaming();
+        if (request == nullptr) {
+            LogWarn() << "StopVideoStreaming sent with a null request! Ignoring...";
+            return grpc::Status::OK;
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->stop_video_streaming(request->stream_id());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);
@@ -1396,10 +1422,10 @@ public:
         return grpc::Status::OK;
     }
 
-    grpc::Status SetDefinitionFileData(
+    grpc::Status SetDefinitionData(
         grpc::ServerContext* /* context */,
-        const rpc::camera::SetDefinitionFileDataRequest* request,
-        rpc::camera::SetDefinitionFileDataResponse* response) override
+        const rpc::camera::SetDefinitionDataRequest* request,
+        rpc::camera::SetDefinitionDataResponse* response) override
     {
         if (_lazy_plugin.maybe_plugin() == nullptr) {
             if (response != nullptr) {
@@ -1411,12 +1437,11 @@ public:
         }
 
         if (request == nullptr) {
-            LogWarn() << "SetDefinitionFileData sent with a null request! Ignoring...";
+            LogWarn() << "SetDefinitionData sent with a null request! Ignoring...";
             return grpc::Status::OK;
         }
 
-        auto result =
-            _lazy_plugin.maybe_plugin()->set_definition_file_data(request->definition_file_data());
+        auto result = _lazy_plugin.maybe_plugin()->set_definition_data(request->definition_data());
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);

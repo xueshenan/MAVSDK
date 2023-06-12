@@ -66,18 +66,18 @@ public:
     /**
      * @brief Camera mode type.
      */
-    enum class CameraMode {
-        Unknown, /**< @brief Unknown. */
+    enum class Mode {
+        Unknown, /**< @brief Unknown mode. */
         Photo, /**< @brief Photo mode. */
         Video, /**< @brief Video mode. */
     };
 
     /**
-     * @brief Stream operator to print information about a `CameraServer::CameraMode`.
+     * @brief Stream operator to print information about a `CameraServer::Mode`.
      *
      * @return A reference to the stream.
      */
-    friend std::ostream& operator<<(std::ostream& str, CameraServer::CameraMode const& camera_mode);
+    friend std::ostream& operator<<(std::ostream& str, CameraServer::Mode const& mode);
 
     /**
      * @brief Type to represent a camera information.
@@ -402,6 +402,50 @@ public:
     respond_take_photo(TakePhotoFeedback take_photo_feedback, CaptureInfo capture_info) const;
 
     /**
+     * @brief Callback type for subscribe_start_photo_interval.
+     */
+    using StartPhotoIntervalCallback = std::function<void(float)>;
+
+    /**
+     * @brief Handle type for subscribe_start_photo_interval.
+     */
+    using StartPhotoIntervalHandle = Handle<float>;
+
+    /**
+     * @brief Subscribe to start photo interval requests. Each request received should response to
+     * using StartPhotoIntervalResponse
+     */
+    StartPhotoIntervalHandle
+    subscribe_start_photo_interval(const StartPhotoIntervalCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_start_photo_interval
+     */
+    void unsubscribe_start_photo_interval(StartPhotoIntervalHandle handle);
+
+    /**
+     * @brief Callback type for subscribe_stop_photo_interval.
+     */
+    using StopPhotoIntervalCallback = std::function<void(int32_t)>;
+
+    /**
+     * @brief Handle type for subscribe_stop_photo_interval.
+     */
+    using StopPhotoIntervalHandle = Handle<int32_t>;
+
+    /**
+     * @brief Subscribe to stop photo interval requests. Each request received should response to
+     * using StopPhotoIntervalResponse
+     */
+    StopPhotoIntervalHandle
+    subscribe_stop_photo_interval(const StopPhotoIntervalCallback& callback);
+
+    /**
+     * @brief Unsubscribe from subscribe_stop_photo_interval
+     */
+    void unsubscribe_stop_photo_interval(StopPhotoIntervalHandle handle);
+
+    /**
      * @brief Callback type for subscribe_start_video.
      */
     using StartVideoCallback = std::function<void(int32_t)>;
@@ -488,25 +532,25 @@ public:
     void unsubscribe_stop_video_streaming(StopVideoStreamingHandle handle);
 
     /**
-     * @brief Callback type for subscribe_set_camera_mode.
+     * @brief Callback type for subscribe_set_mode.
      */
-    using SetCameraModeCallback = std::function<void(CameraMode)>;
+    using SetModeCallback = std::function<void(Mode)>;
 
     /**
-     * @brief Handle type for subscribe_set_camera_mode.
+     * @brief Handle type for subscribe_set_mode.
      */
-    using SetCameraModeHandle = Handle<CameraMode>;
+    using SetModeHandle = Handle<Mode>;
 
     /**
      * @brief Subscribe to set camera mode requests. Each request received should response to using
      * SetCameraModeResponse
      */
-    SetCameraModeHandle subscribe_set_camera_mode(const SetCameraModeCallback& callback);
+    SetModeHandle subscribe_set_mode(const SetModeCallback& callback);
 
     /**
-     * @brief Unsubscribe from subscribe_set_camera_mode
+     * @brief Unsubscribe from subscribe_set_mode
      */
-    void unsubscribe_set_camera_mode(SetCameraModeHandle handle);
+    void unsubscribe_set_mode(SetModeHandle handle);
 
     /**
      * @brief Callback type for subscribe_storage_information.

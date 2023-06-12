@@ -24,6 +24,14 @@ public:
         CameraServer::TakePhotoFeedback take_photo_feedback,
         CameraServer::CaptureInfo capture_info);
 
+    CameraServer::StartPhotoIntervalHandle
+    subscribe_start_photo_interval(const CameraServer::StartPhotoIntervalCallback& callback);
+    void unsubscribe_start_photo_interval(CameraServer::StartPhotoIntervalHandle handle);
+
+    CameraServer::StopPhotoIntervalHandle
+    subscribe_stop_photo_interval(const CameraServer::StopPhotoIntervalCallback& callback);
+    void unsubscribe_stop_photo_interval(CameraServer::StopPhotoIntervalHandle handle);
+
     CameraServer::StartVideoHandle
     subscribe_start_video(const CameraServer::StartVideoCallback& callback);
     void unsubscribe_start_video(CameraServer::StartVideoHandle handle);
@@ -40,9 +48,8 @@ public:
     subscribe_stop_video_streaming(const CameraServer::StopVideoStreamingCallback& callback);
     void unsubscribe_stop_video_streaming(CameraServer::StopVideoStreamingHandle handle);
 
-    CameraServer::SetCameraModeHandle
-    subscribe_set_camera_mode(const CameraServer::SetCameraModeCallback& callback);
-    void unsubscribe_set_camera_mode(CameraServer::SetCameraModeHandle handle);
+    CameraServer::SetModeHandle subscribe_set_mode(const CameraServer::SetModeCallback& callback);
+    void unsubscribe_set_mode(CameraServer::SetModeHandle handle);
 
     CameraServer::StorageInformationHandle
     subscribe_storage_information(const CameraServer::StorageInformationCallback& callback);
@@ -85,11 +92,13 @@ private:
     int32_t _image_capture_count{};
 
     CallbackList<int32_t> _take_photo_callbacks{};
+    CallbackList<float> _start_photo_interval_callbacks{};
+    CallbackList<int32_t> _stop_photo_interval_callbacks{};
     CallbackList<int32_t> _start_video_callbacks{};
     CallbackList<int32_t> _stop_video_callbacks{};
     CallbackList<int32_t> _start_video_streaming_callbacks{};
     CallbackList<int32_t> _stop_video_streaming_callbacks{};
-    CallbackList<CameraServer::CameraMode> _set_camera_mode_callbacks{};
+    CallbackList<CameraServer::Mode> _set_mode_callbacks{};
     CallbackList<int32_t> _storage_information_callbacks{};
     CallbackList<int32_t> _capture_status_callbacks{};
     CallbackList<int32_t> _format_storage_callbacks{};

@@ -47,10 +47,9 @@ ParamServer::retrieve_param_custom(std::string name) const
     return _impl->retrieve_param_custom(name);
 }
 
-ParamServer::Result
-ParamServer::provide_param_custom(std::string name, std::string value, Type value_type) const
+ParamServer::Result ParamServer::provide_param_custom(std::string name, std::string value) const
 {
-    return _impl->provide_param_custom(name, value, value_type);
+    return _impl->provide_param_custom(name, value);
 }
 
 ParamServer::AllParams ParamServer::retrieve_all_params() const
@@ -58,15 +57,15 @@ ParamServer::AllParams ParamServer::retrieve_all_params() const
     return _impl->retrieve_all_params();
 }
 
-ParamServer::ParamChangedHandle ParamServer::subscribe_param_changed(
-    std::string name, Type type, const ParamChangedCallback& callback)
+ParamServer::CustomParamChangedHandle
+ParamServer::subscribe_custom_param_changed(const CustomParamChangedCallback& callback)
 {
-    return _impl->subscribe_param_changed(name, type, callback);
+    return _impl->subscribe_custom_param_changed(callback);
 }
 
-void ParamServer::unsubscribe_param_changed(ParamChangedHandle handle)
+void ParamServer::unsubscribe_custom_param_changed(CustomParamChangedHandle handle)
 {
-    _impl->unsubscribe_param_changed(handle);
+    _impl->unsubscribe_custom_param_changed(handle);
 }
 
 bool operator==(const ParamServer::IntParam& lhs, const ParamServer::IntParam& rhs)
@@ -161,38 +160,6 @@ std::ostream& operator<<(std::ostream& str, ParamServer::Result const& result)
             return str << "No System";
         case ParamServer::Result::ParamValueTooLong:
             return str << "Param Value Too Long";
-        default:
-            return str << "Unknown";
-    }
-}
-
-std::ostream& operator<<(std::ostream& str, ParamServer::Type const& type)
-{
-    switch (type) {
-        case ParamServer::Type::String:
-            return str << "String";
-        case ParamServer::Type::Int8:
-            return str << "Int8";
-        case ParamServer::Type::Uint8:
-            return str << "Uint8";
-        case ParamServer::Type::Int16:
-            return str << "Int16";
-        case ParamServer::Type::Uint16:
-            return str << "Uint16";
-        case ParamServer::Type::Int32:
-            return str << "Int32";
-        case ParamServer::Type::Uint32:
-            return str << "Uint32";
-        case ParamServer::Type::Int64:
-            return str << "Int64";
-        case ParamServer::Type::Uint64:
-            return str << "Uint64";
-        case ParamServer::Type::Float:
-            return str << "Float";
-        case ParamServer::Type::Double:
-            return str << "Double";
-        case ParamServer::Type::Custom:
-            return str << "Custom";
         default:
             return str << "Unknown";
     }

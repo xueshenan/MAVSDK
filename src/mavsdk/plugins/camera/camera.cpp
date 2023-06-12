@@ -90,14 +90,14 @@ Camera::Result Camera::stop_video() const
     return _impl->stop_video();
 }
 
-Camera::Result Camera::start_video_streaming() const
+Camera::Result Camera::start_video_streaming(int32_t stream_id) const
 {
-    return _impl->start_video_streaming();
+    return _impl->start_video_streaming(stream_id);
 }
 
-Camera::Result Camera::stop_video_streaming() const
+Camera::Result Camera::stop_video_streaming(int32_t stream_id) const
 {
-    return _impl->stop_video_streaming();
+    return _impl->stop_video_streaming(stream_id);
 }
 
 void Camera::set_mode_async(Mode mode, const ResultCallback callback)
@@ -264,9 +264,9 @@ Camera::Result Camera::reset_settings() const
     return _impl->reset_settings();
 }
 
-Camera::Result Camera::set_definition_file_data(std::string definition_file_data) const
+Camera::Result Camera::set_definition_data(std::string definition_data) const
 {
-    return _impl->set_definition_file_data(definition_file_data);
+    return _impl->set_definition_data(definition_data);
 }
 
 std::ostream& operator<<(std::ostream& str, Camera::Result const& result)
@@ -586,6 +586,7 @@ std::ostream& operator<<(std::ostream& str, Camera::SettingOptions const& settin
 bool operator==(const Camera::Information& lhs, const Camera::Information& rhs)
 {
     return (rhs.vendor_name == lhs.vendor_name) && (rhs.model_name == lhs.model_name) &&
+           (rhs.firmware_version == lhs.firmware_version) &&
            ((std::isnan(rhs.focal_length_mm) && std::isnan(lhs.focal_length_mm)) ||
             rhs.focal_length_mm == lhs.focal_length_mm) &&
            ((std::isnan(rhs.horizontal_sensor_size_mm) &&
@@ -594,7 +595,10 @@ bool operator==(const Camera::Information& lhs, const Camera::Information& rhs)
            ((std::isnan(rhs.vertical_sensor_size_mm) && std::isnan(lhs.vertical_sensor_size_mm)) ||
             rhs.vertical_sensor_size_mm == lhs.vertical_sensor_size_mm) &&
            (rhs.horizontal_resolution_px == lhs.horizontal_resolution_px) &&
-           (rhs.vertical_resolution_px == lhs.vertical_resolution_px);
+           (rhs.vertical_resolution_px == lhs.vertical_resolution_px) &&
+           (rhs.lens_id == lhs.lens_id) &&
+           (rhs.definition_file_version == lhs.definition_file_version) &&
+           (rhs.definition_file_uri == lhs.definition_file_uri);
 }
 
 std::ostream& operator<<(std::ostream& str, Camera::Information const& information)
@@ -603,11 +607,15 @@ std::ostream& operator<<(std::ostream& str, Camera::Information const& informati
     str << "information:" << '\n' << "{\n";
     str << "    vendor_name: " << information.vendor_name << '\n';
     str << "    model_name: " << information.model_name << '\n';
+    str << "    firmware_version: " << information.firmware_version << '\n';
     str << "    focal_length_mm: " << information.focal_length_mm << '\n';
     str << "    horizontal_sensor_size_mm: " << information.horizontal_sensor_size_mm << '\n';
     str << "    vertical_sensor_size_mm: " << information.vertical_sensor_size_mm << '\n';
     str << "    horizontal_resolution_px: " << information.horizontal_resolution_px << '\n';
     str << "    vertical_resolution_px: " << information.vertical_resolution_px << '\n';
+    str << "    lens_id: " << information.lens_id << '\n';
+    str << "    definition_file_version: " << information.definition_file_version << '\n';
+    str << "    definition_file_uri: " << information.definition_file_uri << '\n';
     str << '}';
     return str;
 }

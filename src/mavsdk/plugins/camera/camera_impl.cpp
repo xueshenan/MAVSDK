@@ -414,21 +414,23 @@ MavlinkCommandSender::CommandLong CameraImpl::make_command_request_storage_info(
     return cmd_req_storage_info;
 }
 
-MavlinkCommandSender::CommandLong CameraImpl::make_command_start_video_streaming()
+MavlinkCommandSender::CommandLong CameraImpl::make_command_start_video_streaming(int32_t stream_id)
 {
     MavlinkCommandSender::CommandLong cmd_start_video_streaming{};
 
     cmd_start_video_streaming.command = MAV_CMD_VIDEO_START_STREAMING;
+    cmd_start_video_streaming.params.maybe_param1 = stream_id;
     cmd_start_video_streaming.target_component_id = _camera_id + MAV_COMP_ID_CAMERA;
 
     return cmd_start_video_streaming;
 }
 
-MavlinkCommandSender::CommandLong CameraImpl::make_command_stop_video_streaming()
+MavlinkCommandSender::CommandLong CameraImpl::make_command_stop_video_streaming(int32_t stream_id)
 {
     MavlinkCommandSender::CommandLong cmd_stop_video_streaming{};
 
     cmd_stop_video_streaming.command = MAV_CMD_VIDEO_STOP_STREAMING;
+    cmd_stop_video_streaming.params.maybe_param1 = stream_id;
     cmd_stop_video_streaming.target_component_id = _camera_id + MAV_COMP_ID_CAMERA;
 
     return cmd_stop_video_streaming;
@@ -621,7 +623,7 @@ void CameraImpl::unsubscribe_information(Camera::InformationHandle handle)
     _information.subscription_callbacks.unsubscribe(handle);
 }
 
-Camera::Result CameraImpl::start_video_streaming()
+Camera::Result CameraImpl::start_video_streaming(int32_t stream_id)
 {
     std::lock_guard<std::mutex> lock(_video_stream_info.mutex);
 
@@ -631,7 +633,7 @@ Camera::Result CameraImpl::start_video_streaming()
     }
 
     // TODO Check whether we're in video mode
-    auto command = make_command_start_video_streaming();
+    auto command = make_command_start_video_streaming(stream_id);
 
     auto result = camera_result_from_command_result(_system_impl->send_command(command));
     // if (result == Camera::Result::Success) {
@@ -642,12 +644,12 @@ Camera::Result CameraImpl::start_video_streaming()
     return result;
 }
 
-Camera::Result CameraImpl::stop_video_streaming()
+Camera::Result CameraImpl::stop_video_streaming(int32_t stream_id)
 {
     // TODO I think we need to maintain current state, whether we issued
     // video capture request or video streaming request, etc.We shouldn't
     // send stop video streaming if we've not started it!
-    auto command = make_command_stop_video_streaming();
+    auto command = make_command_stop_video_streaming(stream_id);
 
     auto result = camera_result_from_command_result(_system_impl->send_command(command));
     {
@@ -2006,7 +2008,7 @@ void CameraImpl::reset_settings_async(const Camera::ResultCallback callback)
         });
 }
 
-Camera::Result CameraImpl::set_definition_file_data(std::string definition_file_data)
+Camera::Result CameraImpl::set_definition_data(std::string definition_data)
 {
     std::lock_guard<std::mutex> lock(_information.mutex);
     if (_camera_definition || _is_fetching_camera_definition) {
@@ -2014,7 +2016,7 @@ Camera::Result CameraImpl::set_definition_file_data(std::string definition_file_
     }
 
     _camera_definition.reset(new CameraDefinition());
-    if (!_camera_definition->load_string(definition_file_data)) {
+    if (!_camera_definition->load_string(definition_data)) {
         return Camera::Result::WrongArgument;
     }
     refresh_params();

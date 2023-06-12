@@ -46,6 +46,28 @@ CameraServer::Result CameraServer::respond_take_photo(
     return _impl->respond_take_photo(take_photo_feedback, capture_info);
 }
 
+CameraServer::StartPhotoIntervalHandle
+CameraServer::subscribe_start_photo_interval(const StartPhotoIntervalCallback& callback)
+{
+    return _impl->subscribe_start_photo_interval(callback);
+}
+
+void CameraServer::unsubscribe_start_photo_interval(StartPhotoIntervalHandle handle)
+{
+    _impl->unsubscribe_start_photo_interval(handle);
+}
+
+CameraServer::StopPhotoIntervalHandle
+CameraServer::subscribe_stop_photo_interval(const StopPhotoIntervalCallback& callback)
+{
+    return _impl->subscribe_stop_photo_interval(callback);
+}
+
+void CameraServer::unsubscribe_stop_photo_interval(StopPhotoIntervalHandle handle)
+{
+    _impl->unsubscribe_stop_photo_interval(handle);
+}
+
 CameraServer::StartVideoHandle
 CameraServer::subscribe_start_video(const StartVideoCallback& callback)
 {
@@ -89,15 +111,14 @@ void CameraServer::unsubscribe_stop_video_streaming(StopVideoStreamingHandle han
     _impl->unsubscribe_stop_video_streaming(handle);
 }
 
-CameraServer::SetCameraModeHandle
-CameraServer::subscribe_set_camera_mode(const SetCameraModeCallback& callback)
+CameraServer::SetModeHandle CameraServer::subscribe_set_mode(const SetModeCallback& callback)
 {
-    return _impl->subscribe_set_camera_mode(callback);
+    return _impl->subscribe_set_mode(callback);
 }
 
-void CameraServer::unsubscribe_set_camera_mode(SetCameraModeHandle handle)
+void CameraServer::unsubscribe_set_mode(SetModeHandle handle)
 {
-    _impl->unsubscribe_set_camera_mode(handle);
+    _impl->unsubscribe_set_mode(handle);
 }
 
 CameraServer::StorageInformationHandle
@@ -426,14 +447,14 @@ operator<<(std::ostream& str, CameraServer::TakePhotoFeedback const& take_photo_
     }
 }
 
-std::ostream& operator<<(std::ostream& str, CameraServer::CameraMode const& camera_mode)
+std::ostream& operator<<(std::ostream& str, CameraServer::Mode const& mode)
 {
-    switch (camera_mode) {
-        case CameraServer::CameraMode::Unknown:
+    switch (mode) {
+        case CameraServer::Mode::Unknown:
             return str << "Unknown";
-        case CameraServer::CameraMode::Photo:
+        case CameraServer::Mode::Photo:
             return str << "Photo";
-        case CameraServer::CameraMode::Video:
+        case CameraServer::Mode::Video:
             return str << "Video";
         default:
             return str << "Unknown";

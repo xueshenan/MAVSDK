@@ -12,7 +12,8 @@
 
 static std::string download_camera_definition_file_by_ftp(std::shared_ptr<mavsdk::System> system);
 
-static void do_camear_settings_test(mavsdk::Camera& camera);
+static void do_camera_operation(mavsdk::Camera& camera);
+static void do_camear_settings(mavsdk::Camera& camera);
 
 static inline void
 SetCameraSettings(mavsdk::Camera& camera, const std::string& name, const std::string& value);
@@ -56,20 +57,12 @@ int main(int argc, const char* argv[])
     auto system = fut.get();
 
     auto camera = mavsdk::Camera{system};
-    camera.subscribe_information([](mavsdk::Camera::Information info) {
-        std::cout << "Camera information:" << std::endl;
-        std::cout << info << std::endl;
-    });
+    do_camera_operation(camera);
 
-    camera.subscribe_status([](mavsdk::Camera::Status status) {
-        std::cout << "Camera status:" << std::endl;
-        std::cout << status << std::endl;
-    });
-
-    std::string define_file_data = download_camera_definition_file_by_ftp(system);
-    if (define_file_data.size() > 0) {
-        camera.set_definition_file_data(define_file_data);
-        do_camear_settings_test(camera);
+    std::string define_data = download_camera_definition_file_by_ftp(system);
+    if (define_data.size() > 0) {
+        camera.set_definition_data(define_data);
+        do_camear_settings(camera);
     }
     while (true) {
         std::this_thread::sleep_for(std::chrono::seconds(1));
@@ -81,7 +74,7 @@ int main(int argc, const char* argv[])
 static std::string download_camera_definition_file_by_ftp(std::shared_ptr<mavsdk::System> system)
 {
     auto ftp = mavsdk::Ftp{system};
-    const std::string camera_define_file_name = "e90.xml";
+    const std::string camera_define_file_name = "C10.xml";
     std::filesystem::path full_path = std::filesystem::current_path().append("build");
 
     auto prom = std::promise<std::string>{};
@@ -114,8 +107,18 @@ static std::string download_camera_definition_file_by_ftp(std::shared_ptr<mavsdk
     return fut.get();
 }
 
-static void do_camear_settings_test(mavsdk::Camera& camera)
+void do_camera_operation(mavsdk::Camera& camera)
 {
+    camera.subscribe_information([](mavsdk::Camera::Information info) {
+        std::cout << "Camera information:" << std::endl;
+        std::cout << info << std::endl;
+    });
+
+    camera.subscribe_status([](mavsdk::Camera::Status status) {
+        std::cout << "Camera status:" << std::endl;
+        std::cout << status << std::endl;
+    });
+
     auto operation_result = camera.format_storage(11);
     std::cout << "format storage result : " << operation_result << std::endl;
 
@@ -128,10 +131,10 @@ static void do_camear_settings_test(mavsdk::Camera& camera)
     // operation_result = camera.stop_video();
     // std::cout << "stop video result : " << operation_result << std::endl;
 
-    operation_result = camera.start_video_streaming();
+    operation_result = camera.start_video_streaming(12);
     std::cout << "start video streaming result : " << operation_result << std::endl;
 
-    operation_result = camera.stop_video_streaming();
+    operation_result = camera.stop_video_streaming(12);
     std::cout << "stop video streaming result : " << operation_result << std::endl;
 
     operation_result = camera.set_mode(mavsdk::Camera::Mode::Photo);
@@ -142,40 +145,25 @@ static void do_camear_settings_test(mavsdk::Camera& camera)
 
     operation_result = camera.reset_settings();
     std::cout << "Reset camera settings result : " << operation_result << std::endl;
+}
 
+static void do_camear_settings(mavsdk::Camera& camera)
+{
+    SetCameraSettings(camera, "CAM_WBMODE", "1");
+
+    SetCameraSettings(camera, "CAM_EXPMODE", "0");
     SetCameraSettings(camera, "CAM_EV", "2.0");
-
-    SetCameraSettings(camera, "CAM_CUSTOMWB", "6000");
-
-    SetCameraSettings(camera, "CAM_SPOTAREA", "2");
-
-    SetCameraSettings(camera, "CAM_ASPECTRATIO", "1.333333");
-
-    SetCameraSettings(camera, "CAM_PHOTOQUAL", "2");
-
-    SetCameraSettings(camera, "CAM_FILENUMOPT", "1");
-
-    SetCameraSettings(camera, "CAM_PHOTOFMT", "2");
 
     SetCameraSettings(camera, "CAM_EXPMODE", "1");
     SetCameraSettings(camera, "CAM_SHUTTERSPD", "0.002083333");
-
-    SetCameraSettings(camera, "CAM_WBMODE", "99");
-
     SetCameraSettings(camera, "CAM_ISO", "6400");
 
     camera.set_mode(mavsdk::Camera::Mode::Video);
-    SetCameraSettings(camera, "CAM_VIDRES", "30");
-
-    SetCameraSettings(camera, "CAM_IMAGEDEWARP", "1");
+    SetCameraSettings(camera, "CAM_VIDFMT", "2");
+    SetCameraSettings(camera, "CAM_VIDRES", "5");
 
     camera.set_mode(mavsdk::Camera::Mode::Photo);
     SetCameraSettings(camera, "CAM_PHOTORATIO", "3");
-
-    SetCameraSettings(camera, "CAM_EXPMODE", "0");
-    SetCameraSettings(camera, "CAM_METERING", "2");
-
-    SetCameraSettings(camera, "CAM_COLORMODE", "5");
 }
 
 static inline void

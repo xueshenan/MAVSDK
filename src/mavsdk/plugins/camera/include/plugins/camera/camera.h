@@ -470,11 +470,18 @@ public:
     struct Information {
         std::string vendor_name{}; /**< @brief Name of the camera vendor */
         std::string model_name{}; /**< @brief Name of the camera model */
+        std::string firmware_version{}; /**< @brief Camera firmware version in
+                                           major[.minor[.patch[.dev]]] format */
         float focal_length_mm{}; /**< @brief Focal length */
         float horizontal_sensor_size_mm{}; /**< @brief Horizontal sensor size */
         float vertical_sensor_size_mm{}; /**< @brief Vertical sensor size */
         uint32_t horizontal_resolution_px{}; /**< @brief Horizontal image resolution in pixels */
         uint32_t vertical_resolution_px{}; /**< @brief Vertical image resolution in pixels */
+        uint32_t lens_id{}; /**< @brief Lens ID */
+        uint32_t
+            definition_file_version{}; /**< @brief Camera definition file version (iteration) */
+        std::string
+            definition_file_uri{}; /**< @brief Camera definition URI (http or mavlink ftp) */
     };
 
     /**
@@ -599,7 +606,7 @@ public:
      *
      * @return Result of request.
      */
-    Result start_video_streaming() const;
+    Result start_video_streaming(int32_t stream_id) const;
 
     /**
      * @brief Stop current video streaming.
@@ -608,7 +615,7 @@ public:
      *
      * @return Result of request.
      */
-    Result stop_video_streaming() const;
+    Result stop_video_streaming(int32_t stream_id) const;
 
     /**
      * @brief Set camera mode.
@@ -920,20 +927,20 @@ public:
     Result reset_settings() const;
 
     /**
-     * @brief Manual set the definition file data
+     * @brief Manual set the definition data
      *
-     * The camera will use the definition file data to config the camera
+     * The camera will use the definition data to config the camera
      * The camera already support http protocol to download definition file
      * But we want to support mavlink ftp way to download file too.
-     * We donot want the camera to use file system to maintain the definition file.
-     * So we use mavlink ftp to downlaod the definition file first,
-     * and read the definition file data set to camera.
+     * We don't want the camera to use file system to maintain the definition file.
+     * So we use mavlink ftp to download the definition file first,
+     * and read the definition file data to manual set.
      *
      * This function is blocking.
      *
      * @return Result of request.
      */
-    Result set_definition_file_data(std::string definition_file_data) const;
+    Result set_definition_data(std::string definition_data) const;
 
     /**
      * @brief Copy constructor.

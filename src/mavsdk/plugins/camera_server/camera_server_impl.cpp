@@ -283,6 +283,29 @@ CameraServer::Result CameraServerImpl::respond_take_photo(
     return CameraServer::Result::Success;
 }
 
+CameraServer::StartPhotoIntervalHandle CameraServerImpl::subscribe_start_photo_interval(
+    const CameraServer::StartPhotoIntervalCallback& callback)
+{
+    return _start_photo_interval_callbacks.subscribe(callback);
+}
+
+void CameraServerImpl::unsubscribe_start_photo_interval(
+    CameraServer::StartPhotoIntervalHandle handle)
+{
+    _start_photo_interval_callbacks.unsubscribe(handle);
+}
+
+CameraServer::StopPhotoIntervalHandle CameraServerImpl::subscribe_stop_photo_interval(
+    const CameraServer::StopPhotoIntervalCallback& callback)
+{
+    return _stop_photo_interval_callbacks.subscribe(callback);
+}
+
+void CameraServerImpl::unsubscribe_stop_photo_interval(CameraServer::StopPhotoIntervalHandle handle)
+{
+    _stop_photo_interval_callbacks.unsubscribe(handle);
+}
+
 CameraServer::StartVideoHandle
 CameraServerImpl::subscribe_start_video(const CameraServer::StartVideoCallback& callback)
 {
@@ -329,15 +352,15 @@ void CameraServerImpl::unsubscribe_stop_video_streaming(
     return _stop_video_streaming_callbacks.unsubscribe(handle);
 }
 
-CameraServer::SetCameraModeHandle
-CameraServerImpl::subscribe_set_camera_mode(const CameraServer::SetCameraModeCallback& callback)
+CameraServer::SetModeHandle
+CameraServerImpl::subscribe_set_mode(const CameraServer::SetModeCallback& callback)
 {
-    return _set_camera_mode_callbacks.subscribe(callback);
+    return _set_mode_callbacks.subscribe(callback);
 }
 
-void CameraServerImpl::unsubscribe_set_camera_mode(CameraServer::SetCameraModeHandle handle)
+void CameraServerImpl::unsubscribe_set_mode(CameraServer::SetModeHandle handle)
 {
-    _set_camera_mode_callbacks.unsubscribe(handle);
+    _set_mode_callbacks.unsubscribe(handle);
 }
 
 CameraServer::StorageInformationHandle CameraServerImpl::subscribe_storage_information(
@@ -375,6 +398,7 @@ CameraServer::Result CameraServerImpl::respond_storage_information(
             status = STORAGE_STATUS::STORAGE_STATUS_READY;
             break;
         case CameraServer::StorageInformation::StorageStatus::NotSupported:
+            status = STORAGE_STATUS::STORAGE_STATUS_NOT_SUPPORTED;
             break;
     }
 
@@ -675,7 +699,7 @@ std::optional<mavlink_message_t> CameraServerImpl::process_storage_information_r
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
 
-    // ack needs to be sent before stroage information message
+    // ack needs to be sent before storage information message
     auto ack_msg =
         _server_component_impl->make_command_ack_message(command, MAV_RESULT::MAV_RESULT_ACCEPTED);
     _server_component_impl->send_message(ack_msg);
@@ -759,25 +783,25 @@ CameraServerImpl::process_set_camera_mode(const MavlinkCommandReceiver::CommandL
 {
     auto camera_mode = static_cast<CAMERA_MODE>(command.params.param2);
 
-    if (_set_camera_mode_callbacks.empty()) {
-        LogDebug() << "Set camera mode requested with no set camera mode subscriber";
+    if (_set_mode_callbacks.empty()) {
+        LogDebug() << "Set mode requested with no set mode subscriber";
         return _server_component_impl->make_command_ack_message(
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
 
     // convert camera mode enum type
-    CameraServer::CameraMode convert_camera_mode = CameraServer::CameraMode::Unknown;
+    CameraServer::Mode convert_camera_mode = CameraServer::Mode::Unknown;
     if (camera_mode == CAMERA_MODE_IMAGE) {
-        convert_camera_mode = CameraServer::CameraMode::Photo;
+        convert_camera_mode = CameraServer::Mode::Photo;
     } else if (camera_mode == CAMERA_MODE_VIDEO) {
-        convert_camera_mode = CameraServer::CameraMode::Video;
+        convert_camera_mode = CameraServer::Mode::Video;
     }
 
-    if (convert_camera_mode == CameraServer::CameraMode::Unknown) {
+    if (convert_camera_mode == CameraServer::Mode::Unknown) {
         return _server_component_impl->make_command_ack_message(
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
-    _set_camera_mode_callbacks(convert_camera_mode);
+    _set_mode_callbacks(convert_camera_mode);
 
     return _server_component_impl->make_command_ack_message(
         command, MAV_RESULT::MAV_RESULT_ACCEPTED);
@@ -918,10 +942,6 @@ CameraServerImpl::process_video_start_capture(const MavlinkCommandReceiver::Comm
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
 
-    auto ack_msg = _server_component_impl->make_command_ack_message(
-        command, MAV_RESULT::MAV_RESULT_IN_PROGRESS);
-    _server_component_impl->send_message(ack_msg);
-
     _start_video_callbacks(stream_id);
 
     return _server_component_impl->make_command_ack_message(
@@ -938,10 +958,6 @@ CameraServerImpl::process_video_stop_capture(const MavlinkCommandReceiver::Comma
         return _server_component_impl->make_command_ack_message(
             command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
     }
-
-    auto ack_msg = _server_component_impl->make_command_ack_message(
-        command, MAV_RESULT::MAV_RESULT_IN_PROGRESS);
-    _server_component_impl->send_message(ack_msg);
 
     _stop_video_callbacks(stream_id);
 
