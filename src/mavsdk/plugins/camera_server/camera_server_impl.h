@@ -16,6 +16,9 @@ public:
 
     CameraServer::Result set_information(CameraServer::Information information);
 
+    CameraServer::Result
+    set_video_stream_info(std::vector<CameraServer::VideoStreamInfo> video_stream_infos);
+
     CameraServer::TakePhotoHandle
     subscribe_take_photo(const CameraServer::TakePhotoCallback& callback);
     void unsubscribe_take_photo(CameraServer::TakePhotoHandle handle);
@@ -76,6 +79,9 @@ private:
 
     bool _is_information_set{};
     CameraServer::Information _information{};
+
+    bool _is_video_stream_info_set{};
+    std::vector<CameraServer::VideoStreamInfo> _video_stream_infos;
 
     // CAMERA_CAPTURE_STATUS fields
     bool _is_image_capture_interval_set{};

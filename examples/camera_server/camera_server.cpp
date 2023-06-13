@@ -11,6 +11,7 @@
 
 static void SubscribeCameraOperation(mavsdk::CameraServer& camera_server);
 static void SubscribeParamOperation(mavsdk::ParamServer& param_server);
+static void FillVideoStreamInfos(mavsdk::CameraServer& camera_server);
 
 int main(int argc, char** argv)
 {
@@ -54,6 +55,8 @@ int main(int argc, char** argv)
         std::cerr << "Failed to set camera info, exiting" << std::endl;
         return 2;
     }
+
+    FillVideoStreamInfos(camera_server);
 
     // works as a server and never quit
     while (true) {
@@ -177,4 +180,39 @@ static void SubscribeParamOperation(mavsdk::ParamServer& param_server)
     param_server.provide_param_int("CAM_VIDFMT", 1);
     param_server.provide_param_int("CAM_VIDRES", 0);
     param_server.provide_param_int("CAM_PHOTORATIO", 1);
+}
+
+static void FillVideoStreamInfos(mavsdk::CameraServer& camera_server)
+{
+    mavsdk::CameraServer::VideoStreamInfo normal_video_stream;
+    normal_video_stream.stream_id = 1;
+
+    normal_video_stream.settings.frame_rate_hz = 60.0;
+    normal_video_stream.settings.horizontal_resolution_pix = 1920;
+    normal_video_stream.settings.vertical_resolution_pix = 1080;
+    normal_video_stream.settings.bit_rate_b_s = 4 * 1024 * 1024;
+    normal_video_stream.settings.rotation_deg = 0;
+    normal_video_stream.settings.uri = "rtsp://10.0.0.11/live";
+    normal_video_stream.settings.horizontal_fov_deg = 0;
+    normal_video_stream.status =
+        mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus::InProgress;
+    normal_video_stream.spectrum =
+        mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::VisibleLight;
+
+    mavsdk::CameraServer::VideoStreamInfo infrared_video_stream;
+    infrared_video_stream.stream_id = 2;
+
+    infrared_video_stream.settings.frame_rate_hz = 24.0;
+    infrared_video_stream.settings.horizontal_resolution_pix = 1280;
+    infrared_video_stream.settings.vertical_resolution_pix = 720;
+    infrared_video_stream.settings.bit_rate_b_s = 4 * 1024;
+    infrared_video_stream.settings.rotation_deg = 0;
+    infrared_video_stream.settings.uri = "rtsp://10.0.0.11/live2";
+    infrared_video_stream.settings.horizontal_fov_deg = 0;
+    infrared_video_stream.status =
+        mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus::InProgress;
+    infrared_video_stream.spectrum =
+        mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::Infrared;
+
+    auto ret = camera_server.set_video_stream_info({normal_video_stream, infrared_video_stream});
 }

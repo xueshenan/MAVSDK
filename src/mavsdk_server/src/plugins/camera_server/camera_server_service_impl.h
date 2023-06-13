@@ -172,6 +172,161 @@ public:
         return obj;
     }
 
+    static std::unique_ptr<rpc::camera_server::VideoStreamSettings>
+    translateToRpcVideoStreamSettings(
+        const mavsdk::CameraServer::VideoStreamSettings& video_stream_settings)
+    {
+        auto rpc_obj = std::make_unique<rpc::camera_server::VideoStreamSettings>();
+
+        rpc_obj->set_frame_rate_hz(video_stream_settings.frame_rate_hz);
+
+        rpc_obj->set_horizontal_resolution_pix(video_stream_settings.horizontal_resolution_pix);
+
+        rpc_obj->set_vertical_resolution_pix(video_stream_settings.vertical_resolution_pix);
+
+        rpc_obj->set_bit_rate_b_s(video_stream_settings.bit_rate_b_s);
+
+        rpc_obj->set_rotation_deg(video_stream_settings.rotation_deg);
+
+        rpc_obj->set_uri(video_stream_settings.uri);
+
+        rpc_obj->set_horizontal_fov_deg(video_stream_settings.horizontal_fov_deg);
+
+        return rpc_obj;
+    }
+
+    static mavsdk::CameraServer::VideoStreamSettings translateFromRpcVideoStreamSettings(
+        const rpc::camera_server::VideoStreamSettings& video_stream_settings)
+    {
+        mavsdk::CameraServer::VideoStreamSettings obj;
+
+        obj.frame_rate_hz = video_stream_settings.frame_rate_hz();
+
+        obj.horizontal_resolution_pix = video_stream_settings.horizontal_resolution_pix();
+
+        obj.vertical_resolution_pix = video_stream_settings.vertical_resolution_pix();
+
+        obj.bit_rate_b_s = video_stream_settings.bit_rate_b_s();
+
+        obj.rotation_deg = video_stream_settings.rotation_deg();
+
+        obj.uri = video_stream_settings.uri();
+
+        obj.horizontal_fov_deg = video_stream_settings.horizontal_fov_deg();
+
+        return obj;
+    }
+
+    static rpc::camera_server::VideoStreamInfo::VideoStreamStatus translateToRpcVideoStreamStatus(
+        const mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus& video_stream_status)
+    {
+        switch (video_stream_status) {
+            default:
+                LogErr() << "Unknown video_stream_status enum value: "
+                         << static_cast<int>(video_stream_status);
+            // FALLTHROUGH
+            case mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus::NotRunning:
+                return rpc::camera_server::
+                    VideoStreamInfo_VideoStreamStatus_VIDEO_STREAM_STATUS_NOT_RUNNING;
+            case mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus::InProgress:
+                return rpc::camera_server::
+                    VideoStreamInfo_VideoStreamStatus_VIDEO_STREAM_STATUS_IN_PROGRESS;
+        }
+    }
+
+    static mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus
+    translateFromRpcVideoStreamStatus(
+        const rpc::camera_server::VideoStreamInfo::VideoStreamStatus video_stream_status)
+    {
+        switch (video_stream_status) {
+            default:
+                LogErr() << "Unknown video_stream_status enum value: "
+                         << static_cast<int>(video_stream_status);
+            // FALLTHROUGH
+            case rpc::camera_server::
+                VideoStreamInfo_VideoStreamStatus_VIDEO_STREAM_STATUS_NOT_RUNNING:
+                return mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus::NotRunning;
+            case rpc::camera_server::
+                VideoStreamInfo_VideoStreamStatus_VIDEO_STREAM_STATUS_IN_PROGRESS:
+                return mavsdk::CameraServer::VideoStreamInfo::VideoStreamStatus::InProgress;
+        }
+    }
+
+    static rpc::camera_server::VideoStreamInfo::VideoStreamSpectrum
+    translateToRpcVideoStreamSpectrum(
+        const mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum& video_stream_spectrum)
+    {
+        switch (video_stream_spectrum) {
+            default:
+                LogErr() << "Unknown video_stream_spectrum enum value: "
+                         << static_cast<int>(video_stream_spectrum);
+            // FALLTHROUGH
+            case mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::Unknown:
+                return rpc::camera_server::
+                    VideoStreamInfo_VideoStreamSpectrum_VIDEO_STREAM_SPECTRUM_UNKNOWN;
+            case mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::VisibleLight:
+                return rpc::camera_server::
+                    VideoStreamInfo_VideoStreamSpectrum_VIDEO_STREAM_SPECTRUM_VISIBLE_LIGHT;
+            case mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::Infrared:
+                return rpc::camera_server::
+                    VideoStreamInfo_VideoStreamSpectrum_VIDEO_STREAM_SPECTRUM_INFRARED;
+        }
+    }
+
+    static mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum
+    translateFromRpcVideoStreamSpectrum(
+        const rpc::camera_server::VideoStreamInfo::VideoStreamSpectrum video_stream_spectrum)
+    {
+        switch (video_stream_spectrum) {
+            default:
+                LogErr() << "Unknown video_stream_spectrum enum value: "
+                         << static_cast<int>(video_stream_spectrum);
+            // FALLTHROUGH
+            case rpc::camera_server::
+                VideoStreamInfo_VideoStreamSpectrum_VIDEO_STREAM_SPECTRUM_UNKNOWN:
+                return mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::Unknown;
+            case rpc::camera_server::
+                VideoStreamInfo_VideoStreamSpectrum_VIDEO_STREAM_SPECTRUM_VISIBLE_LIGHT:
+                return mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::VisibleLight;
+            case rpc::camera_server::
+                VideoStreamInfo_VideoStreamSpectrum_VIDEO_STREAM_SPECTRUM_INFRARED:
+                return mavsdk::CameraServer::VideoStreamInfo::VideoStreamSpectrum::Infrared;
+        }
+    }
+
+    static std::unique_ptr<rpc::camera_server::VideoStreamInfo>
+    translateToRpcVideoStreamInfo(const mavsdk::CameraServer::VideoStreamInfo& video_stream_info)
+    {
+        auto rpc_obj = std::make_unique<rpc::camera_server::VideoStreamInfo>();
+
+        rpc_obj->set_stream_id(video_stream_info.stream_id);
+
+        rpc_obj->set_allocated_settings(
+            translateToRpcVideoStreamSettings(video_stream_info.settings).release());
+
+        rpc_obj->set_status(translateToRpcVideoStreamStatus(video_stream_info.status));
+
+        rpc_obj->set_spectrum(translateToRpcVideoStreamSpectrum(video_stream_info.spectrum));
+
+        return rpc_obj;
+    }
+
+    static mavsdk::CameraServer::VideoStreamInfo
+    translateFromRpcVideoStreamInfo(const rpc::camera_server::VideoStreamInfo& video_stream_info)
+    {
+        mavsdk::CameraServer::VideoStreamInfo obj;
+
+        obj.stream_id = video_stream_info.stream_id();
+
+        obj.settings = translateFromRpcVideoStreamSettings(video_stream_info.settings());
+
+        obj.status = translateFromRpcVideoStreamStatus(video_stream_info.status());
+
+        obj.spectrum = translateFromRpcVideoStreamSpectrum(video_stream_info.spectrum());
+
+        return obj;
+    }
+
     static std::unique_ptr<rpc::camera_server::Position>
     translateToRpcPosition(const mavsdk::CameraServer::Position& position)
     {
@@ -598,6 +753,41 @@ public:
 
         auto result = _lazy_plugin.maybe_plugin()->set_information(
             translateFromRpcInformation(request->information()));
+
+        if (response != nullptr) {
+            fillResponseWithResult(response, result);
+        }
+
+        return grpc::Status::OK;
+    }
+
+    grpc::Status SetVideoStreamInfo(
+        grpc::ServerContext* /* context */,
+        const rpc::camera_server::SetVideoStreamInfoRequest* request,
+        rpc::camera_server::SetVideoStreamInfoResponse* response) override
+    {
+        if (_lazy_plugin.maybe_plugin() == nullptr) {
+            if (response != nullptr) {
+                // For server plugins, this should never happen, they should always be
+                // constructible.
+                auto result = mavsdk::CameraServer::Result::Unknown;
+                fillResponseWithResult(response, result);
+            }
+
+            return grpc::Status::OK;
+        }
+
+        if (request == nullptr) {
+            LogWarn() << "SetVideoStreamInfo sent with a null request! Ignoring...";
+            return grpc::Status::OK;
+        }
+
+        std::vector<mavsdk::CameraServer::VideoStreamInfo> video_stream_infos_vec;
+        for (const auto& elem : request->video_stream_infos()) {
+            video_stream_infos_vec.push_back(translateFromRpcVideoStreamInfo(elem));
+        }
+
+        auto result = _lazy_plugin.maybe_plugin()->set_video_stream_info(video_stream_infos_vec);
 
         if (response != nullptr) {
             fillResponseWithResult(response, result);

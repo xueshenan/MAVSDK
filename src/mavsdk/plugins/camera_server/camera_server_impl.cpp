@@ -188,6 +188,14 @@ CameraServer::Result CameraServerImpl::set_information(CameraServer::Information
     return CameraServer::Result::Success;
 }
 
+CameraServer::Result CameraServerImpl::set_video_stream_info(
+    std::vector<CameraServer::VideoStreamInfo> video_stream_infos)
+{
+    _is_video_stream_info_set = true;
+    _video_stream_infos = video_stream_infos;
+    return CameraServer::Result::Success;
+}
+
 CameraServer::TakePhotoHandle
 CameraServerImpl::subscribe_take_photo(const CameraServer::TakePhotoCallback& callback)
 {
@@ -945,13 +953,48 @@ std::optional<mavlink_message_t> CameraServerImpl::process_video_stream_informat
     const MavlinkCommandReceiver::CommandLong& command)
 {
     auto stream_id = static_cast<uint8_t>(command.params.param1);
-
     UNUSED(stream_id);
 
-    LogDebug() << "unsupported video stream information request";
+    if (!_is_video_stream_info_set) {
+        return _server_component_impl->make_command_ack_message(
+            command, MAV_RESULT::MAV_RESULT_TEMPORARILY_REJECTED);
+    }
+
+    // loop send video stream info
+    for (auto& video_stream_info : _video_stream_infos) {
+        uint16_t flags = 0;
+        if (video_stream_info.status ==
+            CameraServer::VideoStreamInfo::VideoStreamStatus::InProgress) {
+            flags &= VIDEO_STREAM_STATUS_FLAGS_RUNNING;
+        }
+        if (video_stream_info.spectrum ==
+            CameraServer::VideoStreamInfo::VideoStreamSpectrum::Infrared) {
+            flags &= VIDEO_STREAM_STATUS_FLAGS_THERMAL;
+        }
+
+        mavlink_message_t msg{};
+        mavlink_msg_video_stream_information_pack(
+            _server_component_impl->get_own_system_id(),
+            _server_component_impl->get_own_component_id(),
+            &msg,
+            video_stream_info.stream_id,
+            1,
+            0,
+            flags,
+            video_stream_info.settings.frame_rate_hz,
+            video_stream_info.settings.horizontal_resolution_pix,
+            video_stream_info.settings.vertical_resolution_pix,
+            video_stream_info.settings.bit_rate_b_s,
+            video_stream_info.settings.rotation_deg,
+            video_stream_info.settings.horizontal_fov_deg,
+            "",
+            video_stream_info.settings.uri.c_str());
+
+        _server_component_impl->send_message(msg);
+    }
 
     return _server_component_impl->make_command_ack_message(
-        command, MAV_RESULT::MAV_RESULT_UNSUPPORTED);
+        command, MAV_RESULT::MAV_RESULT_ACCEPTED);
 }
 
 std::optional<mavlink_message_t> CameraServerImpl::process_video_stream_status_request(

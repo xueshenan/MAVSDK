@@ -116,6 +116,96 @@ public:
     operator<<(std::ostream& str, CameraServer::Information const& information);
 
     /**
+     * @brief Type for video stream settings.
+     */
+    struct VideoStreamSettings {
+        float frame_rate_hz{}; /**< @brief Frames per second */
+        uint32_t horizontal_resolution_pix{}; /**< @brief Horizontal resolution (in pixels) */
+        uint32_t vertical_resolution_pix{}; /**< @brief Vertical resolution (in pixels) */
+        uint32_t bit_rate_b_s{}; /**< @brief Bit rate (in bits per second) */
+        uint32_t rotation_deg{}; /**< @brief Video image rotation (clockwise, 0-359 degrees) */
+        std::string uri{}; /**< @brief Video stream URI */
+        float horizontal_fov_deg{}; /**< @brief Horizontal fov in degrees */
+    };
+
+    /**
+     * @brief Equal operator to compare two `CameraServer::VideoStreamSettings` objects.
+     *
+     * @return `true` if items are equal.
+     */
+    friend bool operator==(
+        const CameraServer::VideoStreamSettings& lhs, const CameraServer::VideoStreamSettings& rhs);
+
+    /**
+     * @brief Stream operator to print information about a `CameraServer::VideoStreamSettings`.
+     *
+     * @return A reference to the stream.
+     */
+    friend std::ostream&
+    operator<<(std::ostream& str, CameraServer::VideoStreamSettings const& video_stream_settings);
+
+    /**
+     * @brief Information about the video stream.
+     */
+    struct VideoStreamInfo {
+        /**
+         * @brief Video stream status type.
+         */
+        enum class VideoStreamStatus {
+            NotRunning, /**< @brief Video stream is not running. */
+            InProgress, /**< @brief Video stream is running. */
+        };
+
+        /**
+         * @brief Stream operator to print information about a `CameraServer::VideoStreamStatus`.
+         *
+         * @return A reference to the stream.
+         */
+        friend std::ostream& operator<<(
+            std::ostream& str,
+            CameraServer::VideoStreamInfo::VideoStreamStatus const& video_stream_status);
+
+        /**
+         * @brief Video stream light spectrum type
+         */
+        enum class VideoStreamSpectrum {
+            Unknown, /**< @brief Unknown. */
+            VisibleLight, /**< @brief Visible light. */
+            Infrared, /**< @brief Infrared. */
+        };
+
+        /**
+         * @brief Stream operator to print information about a `CameraServer::VideoStreamSpectrum`.
+         *
+         * @return A reference to the stream.
+         */
+        friend std::ostream& operator<<(
+            std::ostream& str,
+            CameraServer::VideoStreamInfo::VideoStreamSpectrum const& video_stream_spectrum);
+
+        int32_t stream_id{}; /**< @brief stream unique id */
+        VideoStreamSettings settings{}; /**< @brief Video stream settings */
+        VideoStreamStatus status{}; /**< @brief Current status of video streaming */
+        VideoStreamSpectrum spectrum{}; /**< @brief Light-spectrum of the video stream */
+    };
+
+    /**
+     * @brief Equal operator to compare two `CameraServer::VideoStreamInfo` objects.
+     *
+     * @return `true` if items are equal.
+     */
+    friend bool
+    operator==(const CameraServer::VideoStreamInfo& lhs, const CameraServer::VideoStreamInfo& rhs);
+
+    /**
+     * @brief Stream operator to print information about a `CameraServer::VideoStreamInfo`.
+     *
+     * @return A reference to the stream.
+     */
+    friend std::ostream&
+    operator<<(std::ostream& str, CameraServer::VideoStreamInfo const& video_stream_info);
+
+    /**
      * @brief Position type in global coordinates.
      */
     struct Position {
@@ -369,6 +459,16 @@ public:
      * @return Result of request.
      */
     Result set_information(Information information) const;
+
+    /**
+     * @brief Sets the video stream information. This must be called as soon as the camera server is
+     * created.
+     *
+     * This function is blocking.
+     *
+     * @return Result of request.
+     */
+    Result set_video_stream_info(std::vector<VideoStreamInfo> video_stream_infos) const;
 
     /**
      * @brief Callback type for subscribe_take_photo.
