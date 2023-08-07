@@ -826,7 +826,7 @@ CameraServerImpl::process_image_start_capture(const MavlinkCommandReceiver::Comm
 
     // single image capture
     if (total_images == 1) {
-        if (seq_number <= _image_capture_count) {
+        if (seq_number < _image_capture_count) {
             LogDebug() << "received invalid single image capture request seq number : "
                        << seq_number << " image capture count " << _image_capture_count;
             // We know we already captured this request, so we can just ack it.
@@ -836,7 +836,7 @@ CameraServerImpl::process_image_start_capture(const MavlinkCommandReceiver::Comm
 
         // MAV_RESULT_ACCEPTED must be sent before CAMERA_IMAGE_CAPTURED
         auto ack_msg = _server_component_impl->make_command_ack_message(
-            command, MAV_RESULT::MAV_RESULT_IN_PROGRESS);
+            command, MAV_RESULT::MAV_RESULT_ACCEPTED);
         _server_component_impl->send_message(ack_msg);
 
         _last_take_photo_command = command;
